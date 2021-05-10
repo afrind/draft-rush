@@ -1,7 +1,7 @@
 ---
 title: "RUSH - Realtime Updated dynamic adaptive Streaming over HTTP"
 abbrev: "rush"
-docname: draft-frindell-ush-latest
+docname: draft-frindell-rush-latest
 category: info
 
 ipr: trust200902
