@@ -19,7 +19,6 @@ author:
     name: Alan Frindell
     organization: Facebook
     email: afrind@fb.com
-
  -
     ins: K. Pugin
     name: Kirill Pugin
