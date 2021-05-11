@@ -24,6 +24,16 @@ author:
     name: Kirill Pugin
     organization: Facebook
     email: ikir@fb.com
+ -
+    ins: J. Cenzano
+    name: Jordi Cenzano
+    organization: Facebook
+    email: jcenzano@fb.com
+ -
+    ins: J. Weissman
+    name: Jake Weissman
+    organization: Facebook
+    email: jakeweissman@fb.com
 
 normative:
   RFC2119:
