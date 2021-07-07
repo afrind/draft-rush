@@ -363,7 +363,7 @@ frames, without data loss MUST produce VALID AAC bitstream.
 
 
 For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with 
-OPUS header as defined in {{RFC7845}}
+OPUS header as defined in {{!RFC7845}}
 
 ### Application Specific Data frame
 
@@ -401,7 +401,7 @@ identify the use case and can be used to add new type of frames.
 
 One of the main goals of the RUSH protocol was ability to provide applications a way 
 to control reliablity of delivering audio/video data. This is achieved by special
-mode {{multi-stream-mode}.
+mode {{multi-stream-mode}}.
 
 ### Normal mode
 
@@ -439,7 +439,7 @@ retransmissions if frame wasn't fully delivered in time.
 # Error Handling
 
 An endpoint that detects an error SHOULD signal the existence of that error to its peer. 
-Errors can affect an entire connection (see {{connection-errors}}), or a single frame (see {{frane-errors}}).
+Errors can affect an entire connection (see {{connection-errors}}), or a single frame (see {{frame-errors}}).
 
 The most appropriate error code SHOULD be included in the error frame that signals the error.
 
