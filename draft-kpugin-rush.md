@@ -107,6 +107,16 @@ ASC:
 
 # Theory of Operations
 
+TODO: add section abotu how it all works
+
+## Connection establishment
+
+## Sending data
+
+## Receiving data
+
+## Reconnect
+
 # Wire Format
 
 ## Frame Header
@@ -146,12 +156,24 @@ Predefined frame types:
 |------------|-------|
 | 0x0 | connect frame|
 | 0x1 | connect ack frame |
-...
+| 0x2 | reserved |
+| 0x3 | reserved |
+| 0x4 | reserved |
 | 0x5 | error frame |
+| 0x6 | reserved |
+| 0x7 | reserved |
+| 0x8 | reserved |
+| 0x9 | reserved |
+| 0xA | reserved |
+| 0XB | reserved |
+| 0xC | reserved |
 | 0xD | video frame |
 | 0xE | audio frame |
-...
-| 0x13 | application specific data frame |
+| 0XF | reserved |
+| 0X10 | reserved |
+| 0x11 | reserved |
+| 0x12 | reserved |
+| 0x13 | reserved |
 
 ## Frames
 
@@ -245,7 +267,7 @@ wrong.
 Depending on error connection can be closed.
 
 
-### Video with Track frame
+### Video frame
 
 ~~~
 +--------------------------------------------------------------+
@@ -311,7 +333,7 @@ EVERY h265 video key-frame MUST start with VPS/SPS/PPS NALUs.
 Binary concatenation of "video data" from consecutive video frames, without data loss MUST produce VALID h264/h265 bitstream.
 
 
-### Audio with Track frame
+### Audio frame
 
 ~~~
 +--------------------------------------------------------------+
@@ -364,37 +386,6 @@ frames, without data loss MUST produce VALID AAC bitstream.
 
 For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with 
 OPUS header as defined in {{!RFC7845}}
-
-### Application Specific Data frame
-
-~~~
-+--------------------------------------------------------------+
-|                       Length (64)                            |
-+--------------------------------------------------------------+
-|                       ID (64)                                |
-+-------+-------+----------------------------------------------+
-| 0x13  |Subtype|
-+-------+-------+----------------------------------------------+
-|                       PTS (64)                               |
-+--------------------------------------------------------------+
-| Payload ...
-+--------------------------------------------------------------+
-~~~
-
-
-SubType:
-: enum identifying the application specific use case
-
-TODO: Enum value registry?
-
-PTS:
-: presentation timestamp in connection video timescale
-
-Payload:
-: generic application specific data
-
-Generic payload that contains application specific data with a subtype to
-identify the use case and can be used to add new type of frames.
 
 
 ## Quic Mapping
@@ -458,15 +449,27 @@ There are two error codes defined in core of the protocol that indicates problem
 
 3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame
 
+# Extensions
+
+RUSH permits extension of the protocol. 
+
+Extensions are permitted to use new frame types ({{wire-format}}), new error codes ({{error-frame}}), 
+new audio and video codecs ({{audio-frame}}, {{video-frame}}).
+
+Implementations MUST ignore unknown or unsupported values in all extensible protocol elements. 
+Implementations MUST discard frames that have unknown or unsupported types. 
+This means that any of these extension points can be safely used by extensions without prior 
+arrangement or negotiation.
 
 # Security Considerations
 
-TODO Security
+RUSH protocol relies on security guarantees provided by the transport.
+Implementation SHOULD be prepare to handle 
 
 
 # IANA Considerations
 
-This document has no IANA actions.
+TODO: add frame type registery, error code registery, audio/video codecs registery
 
 
 
