@@ -44,7 +44,8 @@ informative:
 
 --- abstract
 
-TODO Abstract
+RUSH is an application-level protocol for ingesting live video. 
+This document describes core of the protocol and how it maps onto QUIC
 
 --- middle
 
@@ -107,15 +108,53 @@ ASC:
 
 # Theory of Operations
 
-TODO: add section abotu how it all works
-
 ## Connection establishment
+In order to live stream using RUSH, client should establish QUIC connection first.
+
+After QUIC connection is established, client creates new QUIC stream, choses starting 
+frame ID and sends `Connect frame`  over that stream.
 
 ## Sending data
 
+Client MAY not wait for `ConnectAck frame` and start sending data immediately.
+Client takes encoded audio or video data, increment previously sent frame ID for a given 
+track and serialize that in appropriate frame format ({{audio-frame}}, {{video-frame}}).
+
+Timestamp fields MUST be in a timescale specified by `Connect frame`.
+
+Depending on mode of operation ({{quic-mapping}}), client reuses QUIC stream that was 
+used to send `Connect frame` or it creates new QUIC stream. Once QUIC stream is 
+selected, client sends data over that stream.
+
+Client MAY continue sending audio, video data.
+
+In `Multi stream mode` client may decide to stop sending frame by closing 
+corresponding QUIC stream. There is no guarantee in this case that data were or were not 
+received by the server.
+
 ## Receiving data
 
+Upon receiving `Connect frame`, server replies with `ConnectAck frame` and prepares to
+recieve audio/video data.
+
+It's possible that in `Multi stream mode` ({{multi-stream-mode}}), server receives audio or
+video data before it receives `Connect frame`, it's up to implementation to decide how 
+to deal with that. General recommendation is to wait for `Connect frame` before using any 
+audio/video data as they cannot be interpret correctly.
+
+In `Normal mode` ({{normal-mode}}) it is guaranteed by the transport that frames arrive into 
+application layer in order they were sent, so any gaps in frame sequence IDs for a given 
+track are indication of error on sending side.
+
+In `Multi stream mode` it's possible that frames arrive to application layer out of order 
+they were sent, therefore server MUST keep track of last received frame ID for every track 
+that it receives. Gap in frame sequence ID on a given track MAY indicate out of order 
+delivery and server MAY wait until missing frames arrive. Server must consider frame 
+completely lost if corresponding QUIC stream was closed. 
+
 ## Reconnect
+At any point if QUIC connection is closed, client may reconnect by simply repating 
+`Connection establishment` process ({{connection-establishment}}).
 
 # Wire Format
 
@@ -137,7 +176,7 @@ Generic frame format:
 +-------+------------------------------------------------------+
 ~~~
 
-Length(64):
+Length(64)`:
 : Each frame starts with length field, 64 bit size that tells size of the frame
 in bytes (including predefined fields, so if LENGTH is 100 bytes, then PAYLOAD
 length is 100 - 8 - 8 - 1 = 82 bytes).
@@ -217,6 +256,9 @@ frame" without waiting acknowledgement from the server.
 If server doesn't support VERSION sent by the client, server sends error frame
 with code `UNSUPPORTED VERSION`
 
+If audio time scale or video timescale are 0, server sends error frame with error code 
+`INVALID FRAME FORMAT` and closes connection.
+
 ### Connect Ack frame
 
 ~~~
@@ -237,6 +279,7 @@ If client doesn't receive "Connect Ack" frame from the server within X seconds,
 connection considered BAD, all new frames won't be sent and connection will be
 closed (there is no hard requirement on when connection must be closed).
 
+There can be only one "Connect Ack" frame sent over lifetime of the QUIC connection.
 
 ### Error frame
 
@@ -447,7 +490,7 @@ There are two error codes defined in core of the protocol that indicates problem
 
 2 - UNSUPPORTED CODEC - indicates that server doesn't support audio or video codec
 
-3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame
+3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame or there was an issue with fields' values.
 
 # Extensions
 
@@ -464,7 +507,15 @@ arrangement or negotiation.
 # Security Considerations
 
 RUSH protocol relies on security guarantees provided by the transport.
-Implementation SHOULD be prepare to handle 
+
+Implementation SHOULD be prepare to handle cases when sender deliberately sends
+frames with gaps in sequence IDs. 
+
+Implementation SHOULD be prepare to handle cases when server never receives Connect frame  ({{connect-frame}}).
+
+A frame parser MUST ensure that value of frame length field (see {{frame-header}}) matches actual length of the frame, including the frame header.
+
+Implementation SHOULD be prepare to handle cases when sender sends a frame with large frame length field value. 
 
 
 # IANA Considerations
@@ -478,4 +529,4 @@ TODO: add frame type registery, error code registery, audio/video codecs registe
 # Acknowledgments
 {:numbered="false"}
 
-TODO acknowledge.
+This draft is work of many people: Vlad Shubin, Nitin Garg, Milen Lazarov, Benny Luo, Nick Ruff, Konstantin Tsoy, Nick Wu.
