@@ -15,15 +15,15 @@ pi: [toc, sortrefs, symrefs]
 
 author:
  -
-    ins: A. Frindell
-    name: Alan Frindell
-    organization: Facebook
-    email: afrind@fb.com
- -
     ins: K. Pugin
     name: Kirill Pugin
     organization: Facebook
     email: ikir@fb.com
+ -
+    ins: A. Frindell
+    name: Alan Frindell
+    organization: Facebook
+    email: afrind@fb.com
  -
     ins: J. Cenzano
     name: Jordi Cenzano
@@ -44,16 +44,20 @@ informative:
 
 --- abstract
 
-RUSH is an application-level protocol for ingesting live video. 
+RUSH is an application-level protocol for ingesting live video.
 This document describes core of the protocol and how it maps onto QUIC
 
 --- middle
 
 # Introduction
 
-RUSH is bidirectional application level protocol designed for live video ingestion that runs on top of QUIC. 
+RUSH is bidirectional application level protocol designed for live video
+ingestion that runs on top of QUIC.
 
-RUSH was built as a replacement for RTMP (Real-Time Messaging Protocol) with the goal to provide support for new audio and video codecs, extensibility in form of new message types, multi-track support. In addition, RUSH gives applications option to control data delivery guarantees by utilizing QUIC streams.
+RUSH was built as a replacement for RTMP (Real-Time Messaging Protocol) with the
+goal to provide support for new audio and video codecs, extensibility in form of
+new message types, multi-track support. In addition, RUSH gives applications
+option to control data delivery guarantees by utilizing QUIC streams.
 
 This document describes core of RUSH protocol, wire format, and QUIC mapping.
 
@@ -109,52 +113,58 @@ ASC:
 # Theory of Operations
 
 ## Connection establishment
-In order to live stream using RUSH, client should establish QUIC connection first.
 
-After QUIC connection is established, client creates new QUIC stream, choses starting 
-frame ID and sends `Connect frame`  over that stream.
+In order to live stream using RUSH, client should establish QUIC connection
+first.
+
+After QUIC connection is established, client creates new QUIC stream, choses
+starting frame ID and sends `Connect frame` over that stream.
 
 ## Sending data
 
 Client MAY not wait for `ConnectAck frame` and start sending data immediately.
-Client takes encoded audio or video data, increment previously sent frame ID for a given 
-track and serialize that in appropriate frame format ({{audio-frame}}, {{video-frame}}).
+Client takes encoded audio or video data, increment previously sent frame ID for
+a given track and serialize that in appropriate frame format ({{audio-frame}},
+{{video-frame}}).
 
 Timestamp fields MUST be in a timescale specified by `Connect frame`.
 
-Depending on mode of operation ({{quic-mapping}}), client reuses QUIC stream that was 
-used to send `Connect frame` or it creates new QUIC stream. Once QUIC stream is 
-selected, client sends data over that stream.
+Depending on mode of operation ({{quic-mapping}}), client reuses QUIC stream
+that was used to send `Connect frame` or it creates new QUIC stream. Once QUIC
+stream is selected, client sends data over that stream.
 
 Client MAY continue sending audio, video data.
 
-In `Multi stream mode` client may decide to stop sending frame by closing 
-corresponding QUIC stream. There is no guarantee in this case that data were or were not 
-received by the server.
+In `Multi stream mode` client may decide to stop sending frame by closing
+corresponding QUIC stream. There is no guarantee in this case that data were or
+were not received by the server.
 
 ## Receiving data
 
-Upon receiving `Connect frame`, server replies with `ConnectAck frame` and prepares to
-recieve audio/video data.
+Upon receiving `Connect frame`, server replies with `ConnectAck frame` and
+prepares to recieve audio/video data.
 
-It's possible that in `Multi stream mode` ({{multi-stream-mode}}), server receives audio or
-video data before it receives `Connect frame`, it's up to implementation to decide how 
-to deal with that. General recommendation is to wait for `Connect frame` before using any 
-audio/video data as they cannot be interpret correctly.
+It's possible that in `Multi stream mode` ({{multi-stream-mode}}), server
+receives audio or video data before it receives `Connect frame`, it's up to
+implementation to decide how to deal with that. General recommendation is to
+wait for `Connect frame` before using any audio/video data as they cannot be
+interpret correctly.
 
-In `Normal mode` ({{normal-mode}}) it is guaranteed by the transport that frames arrive into 
-application layer in order they were sent, so any gaps in frame sequence IDs for a given 
-track are indication of error on sending side.
+In `Normal mode` ({{normal-mode}}) it is guaranteed by the transport that frames
+arrive into application layer in order they were sent, so any gaps in frame
+sequence IDs for a given track are indication of error on sending side.
 
-In `Multi stream mode` it's possible that frames arrive to application layer out of order 
-they were sent, therefore server MUST keep track of last received frame ID for every track 
-that it receives. Gap in frame sequence ID on a given track MAY indicate out of order 
-delivery and server MAY wait until missing frames arrive. Server must consider frame 
-completely lost if corresponding QUIC stream was closed. 
+In `Multi stream mode` it's possible that frames arrive to application layer out
+of order they were sent, therefore server MUST keep track of last received frame
+ID for every track that it receives. Gap in frame sequence ID on a given track
+MAY indicate out of order delivery and server MAY wait until missing frames
+arrive. Server must consider frame completely lost if corresponding QUIC stream
+was closed.
 
 ## Reconnect
-At any point if QUIC connection is closed, client may reconnect by simply repating 
-`Connection establishment` process ({{connection-establishment}}).
+
+At any point if QUIC connection is closed, client may reconnect by simply
+repating `Connection establishment` process ({{connection-establishment}}).
 
 # Wire Format
 
@@ -244,7 +254,8 @@ Audio Timescale:
 value same as audio sample rate, for example 44100
 
 Live Session ID:
-: identifier of broadcast, when reconnect, client MUST use the same live session ID
+: identifier of broadcast, when reconnect, client MUST use the same live session
+ID
 
 Payload:
 : application and version specific data that can be used by server. OPTIONAL
@@ -256,8 +267,8 @@ frame" without waiting acknowledgement from the server.
 If server doesn't support VERSION sent by the client, server sends error frame
 with code `UNSUPPORTED VERSION`
 
-If audio time scale or video timescale are 0, server sends error frame with error code 
-`INVALID FRAME FORMAT` and closes connection.
+If audio time scale or video timescale are 0, server sends error frame with
+error code `INVALID FRAME FORMAT` and closes connection.
 
 ### Connect Ack frame
 
@@ -279,7 +290,8 @@ If client doesn't receive "Connect Ack" frame from the server within X seconds,
 connection considered BAD, all new frames won't be sent and connection will be
 closed (there is no hard requirement on when connection must be closed).
 
-There can be only one "Connect Ack" frame sent over lifetime of the QUIC connection.
+There can be only one "Connect Ack" frame sent over lifetime of the QUIC
+connection.
 
 ### Error frame
 
@@ -351,8 +363,8 @@ Track ID:
 : ID of the track that this frame is on
 
 I-Frame ID Offset:
-: Distance from sequence ID of the I-frame that is required before this frame can
-be decoded. This can be useful to decide if frame can be dropped.
+: Distance from sequence ID of the I-frame that is required before this frame
+can be decoded. This can be useful to decide if frame can be dropped.
 
 
 Video Data:
@@ -373,7 +385,8 @@ For h264/h265 codec, "Video Data" are 1 or more NALUs in AVCC format:
 EVERY h264 video key-frame MUST start with SPS/PPS NALUs.
 EVERY h265 video key-frame MUST start with VPS/SPS/PPS NALUs.
 
-Binary concatenation of "video data" from consecutive video frames, without data loss MUST produce VALID h264/h265 bitstream.
+Binary concatenation of "video data" from consecutive video frames, without data
+loss MUST produce VALID h264/h265 bitstream.
 
 
 ### Audio frame
@@ -414,7 +427,8 @@ Audio Data:
 : variable length field, that carries 1 or more audio frames that is codec
 dependent.
 
-For AAC codec, "Audio Data" are 1 or more AAC samples, prefixed with ADTS HEADER:
+For AAC codec, "Audio Data" are 1 or more AAC samples, prefixed with ADTS
+HEADER:
 
 ~~~
 152        158       ...     N
@@ -426,29 +440,28 @@ For AAC codec, "Audio Data" are 1 or more AAC samples, prefixed with ADTS HEADER
 Binary concatenation of all AAC samples in "Audio Data" from consecutive audio
 frames, without data loss MUST produce VALID AAC bitstream.
 
-
-For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with 
-OPUS header as defined in {{!RFC7845}}
+For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with OPUS
+header as defined in {{!RFC7845}}
 
 
 ## Quic Mapping
 
-One of the main goals of the RUSH protocol was ability to provide applications a way 
-to control reliablity of delivering audio/video data. This is achieved by special
-mode {{multi-stream-mode}}.
+One of the main goals of the RUSH protocol was ability to provide applications a
+way to control reliablity of delivering audio/video data. This is achieved by
+special mode {{multi-stream-mode}}.
 
 ### Normal mode
 
-In normal mode RUSH uses one QUIC stream to send data and one QUIC stream 
-to receive data. Using one stream guarantees reliable, in-order delivery - applications
-can rely on QUIC transport layer to retransmit lost packets.
+In normal mode RUSH uses one QUIC stream to send data and one QUIC stream to
+receive data. Using one stream guarantees reliable, in-order delivery -
+applications can rely on QUIC transport layer to retransmit lost packets.
 
 ### Multi stream mode
 
-In normal mode, if packet belonging to video frame is lost, all packets sent after it 
-will not be delivered to application, even though those packets may have arrived
-to receiving QUIC endpoint. This introduces head of line blocking and can 
-negatively impact latency.
+In normal mode, if packet belonging to video frame is lost, all packets sent
+after it will not be delivered to application, even though those packets may
+have arrived to receiving QUIC endpoint. This introduces head of line blocking
+and can negatively impact latency.
 
 To address this problem, RUSH defines "multi-stream" mode, in which one QUIC
 stream is used per audio/video frame.
@@ -465,62 +478,76 @@ Receiver SHOULD order frames within a track using frames IDs.
 Response Streams, Connect Ack and Error, will be in the response stream of the
 stream that sent it.
 
-Application MAY control delivery reliability by setting delivery timer for every audio
-or video frame and close QUIC stream when timer fires - this will effectively stop
-retransmissions if frame wasn't fully delivered in time.
+Application MAY control delivery reliability by setting delivery timer for every
+audio or video frame and close QUIC stream when timer fires - this will
+effectively stop retransmissions if frame wasn't fully delivered in time.
 
 
 # Error Handling
 
-An endpoint that detects an error SHOULD signal the existence of that error to its peer. 
-Errors can affect an entire connection (see {{connection-errors}}), or a single frame (see {{frame-errors}}).
+An endpoint that detects an error SHOULD signal the existence of that error to
+its peer.  Errors can affect an entire connection (see {{connection-errors}}),
+or a single frame (see {{frame-errors}}).
 
-The most appropriate error code SHOULD be included in the error frame that signals the error.
+The most appropriate error code SHOULD be included in the error frame that
+signals the error.
 
 
 ## Connection errors
-There is one error code defined in core of the protocol that indicates connection error:
 
-1 - UNSUPPORTED VERSION - indicates that server doesn't support version specified in Connect frame
+There is one error code defined in core of the protocol that indicates
+connection error:
+
+1 - UNSUPPORTED VERSION - indicates that server doesn't support version
+specified in Connect frame
 
 
 ## Frame errors
 
-There are two error codes defined in core of the protocol that indicates problems with particular frame:
+There are two error codes defined in core of the protocol that indicates
+problems with particular frame:
 
-2 - UNSUPPORTED CODEC - indicates that server doesn't support audio or video codec
+2 - UNSUPPORTED CODEC - indicates that server doesn't support audio or video
+codec
 
-3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame or there was an issue with fields' values.
+3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame
+or there was an issue with fields' values.
 
 # Extensions
 
-RUSH permits extension of the protocol. 
+RUSH permits extension of the protocol.
 
-Extensions are permitted to use new frame types ({{wire-format}}), new error codes ({{error-frame}}), 
-new audio and video codecs ({{audio-frame}}, {{video-frame}}).
+Extensions are permitted to use new frame types ({{wire-format}}), new error
+codes ({{error-frame}}), new audio and video codecs ({{audio-frame}},
+{{video-frame}}).
 
-Implementations MUST ignore unknown or unsupported values in all extensible protocol elements. 
-Implementations MUST discard frames that have unknown or unsupported types. 
-This means that any of these extension points can be safely used by extensions without prior 
-arrangement or negotiation.
+Implementations MUST ignore unknown or unsupported values in all extensible
+protocol elements.  Implementations MUST discard frames that have unknown or
+unsupported types.  This means that any of these extension points can be safely
+used by extensions without prior arrangement or negotiation.
 
 # Security Considerations
 
 RUSH protocol relies on security guarantees provided by the transport.
 
 Implementation SHOULD be prepare to handle cases when sender deliberately sends
-frames with gaps in sequence IDs. 
+frames with gaps in sequence IDs.
 
-Implementation SHOULD be prepare to handle cases when server never receives Connect frame  ({{connect-frame}}).
+Implementation SHOULD be prepare to handle cases when server never receives
+Connect frame ({{connect-frame}}).
 
-A frame parser MUST ensure that value of frame length field (see {{frame-header}}) matches actual length of the frame, including the frame header.
+A frame parser MUST ensure that value of frame length field (see
+{{frame-header}}) matches actual length of the frame, including the frame
+header.
 
-Implementation SHOULD be prepare to handle cases when sender sends a frame with large frame length field value. 
+Implementation SHOULD be prepare to handle cases when sender sends a frame with
+large frame length field value.
 
 
 # IANA Considerations
 
-TODO: add frame type registery, error code registery, audio/video codecs registery
+TODO: add frame type registery, error code registery, audio/video codecs
+registery
 
 
 
