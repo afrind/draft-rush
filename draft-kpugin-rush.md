@@ -55,11 +55,12 @@ RUSH is bidirectional application level protocol designed for live video
 ingestion that runs on top of QUIC.
 
 RUSH was built as a replacement for RTMP (Real-Time Messaging Protocol) with the
-goal to provide support for new audio and video codecs, extensibility in form of
-new message types, multi-track support. In addition, RUSH gives applications
-option to control data delivery guarantees by utilizing QUIC streams.
+goal to provide support for new audio and video codecs, extensibility in the
+form of new message types, and multi-track support. In addition, RUSH gives
+applications option to control data delivery guarantees by utilizing QUIC
+streams.
 
-This document describes core of RUSH protocol, wire format, and QUIC mapping.
+This document describes the RUSH protocol, wire format, and QUIC mapping.
 
 # Conventions and Definitions
 
@@ -114,64 +115,82 @@ ASC:
 
 ## Connection establishment
 
-In order to live stream using RUSH, client should establish QUIC connection
-first.
+In order to live stream using RUSH, the client establishes a QUIC connection
+using the ALPN token "rush".
 
-After QUIC connection is established, client creates new QUIC stream, choses
-starting frame ID and sends `Connect frame` over that stream.
+After the QUIC connection is established, client creates a new bidirectional
+QUIC stream, choses starting frame ID and sends `Connect` frame
+{{connect-frame}} over that stream.  This stream is called the Connect Stream.
 
-## Sending data
+TODO: How does the client choose a frame ID?
 
-Client MAY not wait for `ConnectAck frame` and start sending data immediately.
-Client takes encoded audio or video data, increment previously sent frame ID for
-a given track and serialize that in appropriate frame format ({{audio-frame}},
-{{video-frame}}).
+TODO: Can a single connection be used to transfer more than one video
+simultaneously?  Or sequentially?
 
-Timestamp fields MUST be in a timescale specified by `Connect frame`.
+## Sending Video Data
 
-Depending on mode of operation ({{quic-mapping}}), client reuses QUIC stream
-that was used to send `Connect frame` or it creates new QUIC stream. Once QUIC
-stream is selected, client sends data over that stream.
+The client can choose to wait for the `ConnectAck` frame {{connect-ack-frame}}
+or it can start sending data immediately after sending the `Connect` frame.
 
-Client MAY continue sending audio, video data.
+Encoded audio or video data is serialized into frames (see {{audio-frame}} or
+{{video-frame}}) on per-track basis and transmitted from the client to the
+server.  The frames carry a unique, monotonically increasing frame ID and a
+timestamp.  The timestamp fields are encoded on a timescale specified by
+`Connect` frame.
 
-In `Multi stream mode` client may decide to stop sending frame by closing
-corresponding QUIC stream. There is no guarantee in this case that data were or
-were not received by the server.
+TODO: how are tracks involved exactly?
+TODO: maybe have a seperate section describing frame IDs?
+TODO: How do the client and server negotiate the mode of operation?
+
+Depending on mode of operation ({{quic-mapping}}), the client sends audio and
+video frames on the Connect stream or on an new QUIC stream for each frame.
+
+In `Multi Stream Mode` ({{multi-stream-mode}}), the client can stop sending a
+frame by resetting the corresponding QUIC stream. In this case, there is no
+guarantee that the frame was received by the server.
 
 ## Receiving data
 
-Upon receiving `Connect frame`, server replies with `ConnectAck frame` and
-prepares to recieve audio/video data.
+Upon receiving `Connect` frame, the server replies with `ConnectAck` frame
+{{connect-ack-frame}} and prepares to recieve audio/video data.
 
-It's possible that in `Multi stream mode` ({{multi-stream-mode}}), server
-receives audio or video data before it receives `Connect frame`, it's up to
-implementation to decide how to deal with that. General recommendation is to
-wait for `Connect frame` before using any audio/video data as they cannot be
-interpret correctly.
+It's possible that in `Multi Stream Mode` ({{multi-stream-mode}}), the server
+receives audio or video data before it receives `Connect` frame.  The implementation can choose whether to buffer or drop the data.  The audio/video data cannot be interpreted correctly before the arrival of the `Connect` frame.
 
-In `Normal mode` ({{normal-mode}}) it is guaranteed by the transport that frames
-arrive into application layer in order they were sent, so any gaps in frame
-sequence IDs for a given track are indication of error on sending side.
+In `Normal Mode` ({{normal-mode}}), it is guaranteed by the transport that
+frames arrive into application layer in order they were sent, so any gaps in
+frame sequence IDs for a given track are indication of error on sending side.
 
-In `Multi stream mode` it's possible that frames arrive to application layer out
-of order they were sent, therefore server MUST keep track of last received frame
-ID for every track that it receives. Gap in frame sequence ID on a given track
-MAY indicate out of order delivery and server MAY wait until missing frames
-arrive. Server must consider frame completely lost if corresponding QUIC stream
-was closed.
+TODO: specify error handling behavior
+
+In `Multi Stream Mode`, it's possible that frames arrive at the application
+layer in a different order than they were sent, therefore server MUST keep track
+of last received frame ID for every track that it receives. A gap in the frame
+sequence ID on a given track MAY indicate out of order delivery and then server
+MAY wait until missing frames arrive. Server must consider frame completely lost
+if corresponding QUIC stream was reset.
+
+TODO: describe how to handle gaps - is the entire track in error?
+
+TODO: How does the client signal the "end" of the video?
 
 ## Reconnect
 
-At any point if QUIC connection is closed, client may reconnect by simply
+If the QUIC connection is closed at any point, client MAY reconnect by simply
 repating `Connection establishment` process ({{connection-establishment}}).
+
+TODO: can it resume sending the same video where it left off?  How, especially
+if the new connection is terminated by a different server?.
+
+TOOD: Is there a graceful way to close the connection?  Is there GOAWAY-like
+behavior so the client knows to make a new connection before the old one breaks?
 
 # Wire Format
 
 ## Frame Header
 
-Client and server exchanges information using frames. Frames can be different
-types and data passed within a frame depends on its type.
+The client and server exchange information using frames. There are different
+types of frames and the payload of each frame depends on its type.
 
 Generic frame format:
 
@@ -260,15 +279,18 @@ ID
 Payload:
 : application and version specific data that can be used by server. OPTIONAL
 
-This is frame used by a client. It sends a connect frame to initiate
-broadcasting. The client can start sending other frames right after "Connect
-frame" without waiting acknowledgement from the server.
+This frame is used by the client to initiate broadcasting. The client can start
+sending other frames immediately after "Connect frame" without waiting
+acknowledgement from the server.
 
-If server doesn't support VERSION sent by the client, server sends error frame
-with code `UNSUPPORTED VERSION`
+If server doesn't support VERSION sent by the client, the server sends an Error
+frame with code `UNSUPPORTED VERSION`.
 
-If audio time scale or video timescale are 0, server sends error frame with
+If audio timescale or video timescale are 0, the server sends error frame with
 error code `INVALID FRAME FORMAT` and closes connection.
+
+If the client receives a Connect frame from the server, the client sends an
+Error frame with code `TBD`.
 
 ### Connect Ack frame
 
@@ -283,15 +305,18 @@ error code `INVALID FRAME FORMAT` and closes connection.
 +-------+
 ~~~
 
-Server sends "Connect Ack" frame in response to "Connect" frame indicating that
-server accepts "version" and ready to receive data.
+The server sends the "Connect Ack" frame in response to "Connect" frame
+indicating that server accepts "version" and is ready to receive data.
 
-If client doesn't receive "Connect Ack" frame from the server within X seconds,
-connection considered BAD, all new frames won't be sent and connection will be
-closed (there is no hard requirement on when connection must be closed).
+If the client doesn't receive "Connect Ack" frame from the server within a
+timeout, it will close the connection.  The timeout value is chosen by the
+implementation.
 
 There can be only one "Connect Ack" frame sent over lifetime of the QUIC
 connection.
+
+If the server receives a Connect Ack frame from the client, the client sends an
+Error frame with code `TBD`.
 
 ### Error frame
 
@@ -316,10 +341,11 @@ indicates connection level error.
 Error Code:
 : 32 bit unsigned integer
 
-Error frame can be sent by client or server to communicate that something is
-wrong.
+Error frame can be sent by the client or the server to indicate that an error
+occurred.
 
-Depending on error connection can be closed.
+Some errors are fatal and the connection will be closed after sending the Error
+frame.
 
 
 ### Video frame
@@ -448,40 +474,44 @@ header as defined in {{!RFC7845}}
 
 One of the main goals of the RUSH protocol was ability to provide applications a
 way to control reliablity of delivering audio/video data. This is achieved by
-special mode {{multi-stream-mode}}.
+using a special mode {{multi-stream-mode}}.
 
 ### Normal mode
 
-In normal mode RUSH uses one QUIC stream to send data and one QUIC stream to
+In normal mode, RUSH uses one QUIC stream to send data and one QUIC stream to
 receive data. Using one stream guarantees reliable, in-order delivery -
-applications can rely on QUIC transport layer to retransmit lost packets.
+applications can rely on QUIC transport layer to retransmit lost packets.  The
+performance characteristics of this mode are similar to RTMP over TCP.
 
-### Multi stream mode
+TODO: isn't it 1 bidirectional stream?
+
+### Multi Stream Mode
 
 In normal mode, if packet belonging to video frame is lost, all packets sent
 after it will not be delivered to application, even though those packets may
-have arrived to receiving QUIC endpoint. This introduces head of line blocking
-and can negatively impact latency.
+have arrived at the server. This introduces head of line blocking and can
+negatively impact latency.
 
-To address this problem, RUSH defines "multi-stream" mode, in which one QUIC
+To address this problem, RUSH defines "Multi Stream Mode", in which one QUIC
 stream is used per audio/video frame.
 
-Connection establishment follows normal procedure by client sending Connect
+Connection establishment follows the normal procedure by client sending Connect
 frame, after that Video and Audio frams are sent using following rules:
 
-* Each new frame is send on new QUIC stream
+* Each new frame is sent on new bidirectional QUIC stream
 * Frames within same track must have IDs that are monotonically increasing,
 such that ID(n) = ID(n-1) + 1
 
-Receiver SHOULD order frames within a track using frames IDs.
+The receiver reconstructs the track using the frames IDs.
 
-Response Streams, Connect Ack and Error, will be in the response stream of the
+Response Frames (Connect Ack and Error), will be in the response stream of the
 stream that sent it.
 
-Application MAY control delivery reliability by setting delivery timer for every
-audio or video frame and close QUIC stream when timer fires - this will
-effectively stop retransmissions if frame wasn't fully delivered in time.
+The client MAY control delivery reliability by setting a delivery timer for
+every audio or video frame and reset the QUIC stream when timer fires.  This
+will effectively stop retransmissions if frame wasn't fully delivered in time.
 
+TODO: Is there a way for the client and server to negotiate this timer?
 
 # Error Handling
 
@@ -493,7 +523,7 @@ The most appropriate error code SHOULD be included in the error frame that
 signals the error.
 
 
-## Connection errors
+## Connection Errors
 
 There is one error code defined in core of the protocol that indicates
 connection error:
@@ -504,27 +534,30 @@ specified in Connect frame
 
 ## Frame errors
 
-There are two error codes defined in core of the protocol that indicates
-problems with particular frame:
+There are two error codes defined in core protocol that indicate a problem with
+a particular frame:
 
-2 - UNSUPPORTED CODEC - indicates that server doesn't support audio or video
-codec
+2 - UNSUPPORTED CODEC - indicates that the server doesn't support the given
+audio or video codec
 
-3 - INVALID FRAME FORMAT - indicates that receiver was not able to parse frame
-or there was an issue with fields' values.
+3 - INVALID FRAME FORMAT - indicates that the receiver was not able to parse
+the frame or there was an issue with a field's value.
 
 # Extensions
 
 RUSH permits extension of the protocol.
 
 Extensions are permitted to use new frame types ({{wire-format}}), new error
-codes ({{error-frame}}), new audio and video codecs ({{audio-frame}},
+codes ({{error-frame}}), or new audio and video codecs ({{audio-frame}},
 {{video-frame}}).
 
 Implementations MUST ignore unknown or unsupported values in all extensible
 protocol elements.  Implementations MUST discard frames that have unknown or
 unsupported types.  This means that any of these extension points can be safely
 used by extensions without prior arrangement or negotiation.
+
+TODO: Is this correct?  eg if a server doesn't support the codec doesn't it need
+to return an Error frame?
 
 # Security Considerations
 
