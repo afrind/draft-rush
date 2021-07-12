@@ -126,9 +126,6 @@ After the QUIC connection is established, client creates a new bidirectional
 QUIC stream, choses starting frame ID and sends `Connect` frame
 {{connect-frame}} over that stream.  This stream is called the Connect Stream.
 
-Client free to choose initial frame ID - server upon receiving first frame ID will use as a 
-start of a seqence.
-
 Client sends `mode of operation` setting in `Connect` frame payload, format of the 
 payload is `TBD`.
 
@@ -149,11 +146,12 @@ Track is a logical organization of tha data, for example, video can have one vid
 and two audio tracks (for two languages). It's up to the client to choose unique Track ID for
 every track in the video. Client can send data for multiple tracks simultaneously.  
 
-Each track has it's own monotonically increasing frame ID sequence. ID of first frame that
-server receives for a given track is used as a start of that sequence. There is potential race 
-condition, if `Multi Stream Mode` ({{multi-stream-mode}}) is used, frames can arrive
-out of order, if frame with ID = N arrives first, all frames with IDs < N will be discarded by 
-server (TODO: add a way to negotiate start of the frame ID sequence).
+Each track has it's own monotonically increasing frame ID sequence. Client MUST start with
+initial frame ID = 1. ID of first frame that server receives for a given track is used as a start 
+of that sequence. There is potential race condition, if `Multi Stream Mode` 
+({{multi-stream-mode}}) is used, frames can arrive out of order, if frame with ID = N arrives 
+first, all frames with IDs < N will be discarded by server (TODO: add a way to negotiate 
+start of the frame ID sequence).
 
 Depending on mode of operation ({{quic-mapping}}), the client sends audio and
 video frames on the Connect stream or on an new QUIC stream for each frame.
