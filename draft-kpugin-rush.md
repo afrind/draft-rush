@@ -110,6 +110,10 @@ ASC:
 
 : Audio specific config
 
+GOP:
+
+: Group of pictures, specifies the order in which intra- and inter-frames are arranged.
+
 
 # Theory of Operations
 
@@ -122,10 +126,13 @@ After the QUIC connection is established, client creates a new bidirectional
 QUIC stream, choses starting frame ID and sends `Connect` frame
 {{connect-frame}} over that stream.  This stream is called the Connect Stream.
 
-TODO: How does the client choose a frame ID?
+Client free to choose initial frame ID - server upon receiving first frame ID will use as a 
+start of a seqence.
 
-TODO: Can a single connection be used to transfer more than one video
-simultaneously?  Or sequentially?
+Client sends `mode of operation` setting in `Connect` frame payload, format of the 
+payload is `TBD`.
+
+One connection SHOULD only be used to send one video. 
 
 ## Sending Video Data
 
@@ -138,9 +145,15 @@ server.  The frames carry a unique, monotonically increasing frame ID and a
 timestamp.  The timestamp fields are encoded on a timescale specified by
 `Connect` frame.
 
-TODO: how are tracks involved exactly?
-TODO: maybe have a seperate section describing frame IDs?
-TODO: How do the client and server negotiate the mode of operation?
+Track is a logical organization of tha data, for example, video can have one video track,
+and two audio tracks (for two languages). It's up to the client to choose unique Track ID for
+every track in the video. Client can send data for multiple tracks simultaneously.  
+
+Each track has it's own monotonically increasing frame ID sequence. ID of first frame that
+server receives for a given track is used as a start of that sequence. There is potential race 
+condition, if `Multi Stream Mode` ({{multi-stream-mode}}) is used, frames can arrive
+out of order, if frame with ID = N arrives first, all frames with IDs < N will be discarded by 
+server (TODO: add a way to negotiate start of the frame ID sequence).
 
 Depending on mode of operation ({{quic-mapping}}), the client sends audio and
 video frames on the Connect stream or on an new QUIC stream for each frame.
@@ -158,10 +171,7 @@ It's possible that in `Multi Stream Mode` ({{multi-stream-mode}}), the server
 receives audio or video data before it receives `Connect` frame.  The implementation can choose whether to buffer or drop the data.  The audio/video data cannot be interpreted correctly before the arrival of the `Connect` frame.
 
 In `Normal Mode` ({{normal-mode}}), it is guaranteed by the transport that
-frames arrive into application layer in order they were sent, so any gaps in
-frame sequence IDs for a given track are indication of error on sending side.
-
-TODO: specify error handling behavior
+frames arrive into application layer in order they were sent.
 
 In `Multi Stream Mode`, it's possible that frames arrive at the application
 layer in a different order than they were sent, therefore server MUST keep track
@@ -170,20 +180,28 @@ sequence ID on a given track MAY indicate out of order delivery and then server
 MAY wait until missing frames arrive. Server must consider frame completely lost
 if corresponding QUIC stream was reset.
 
-TODO: describe how to handle gaps - is the entire track in error?
+Server upon detecting gap in frame MAY wait for implemetnation defined time, if missing
+frames didn't arrive, server SHOULD ignore them and continue processing rest of 
+the frames. For example if server recieves frames for track 1: `1 2 3 5 6`, after 
+implememtation defined timeout, if frame `#4` hasn't arrived, server SHOULD continue 
+processing frames `5` and `6`
 
-TODO: How does the client signal the "end" of the video?
+
+When client is done streaming, it sends `End of stream` frame ({{end-of-stream-frame}})
+to indicate to the server that there won't be any more data sent.
 
 ## Reconnect
 
 If the QUIC connection is closed at any point, client MAY reconnect by simply
 repating `Connection establishment` process ({{connection-establishment}}).
 
-TODO: can it resume sending the same video where it left off?  How, especially
-if the new connection is terminated by a different server?.
+Client can resume sending same video where it left off. In order to support termination of
+new connection by a new server, client SHOULD resume sending video frames starting with
+I-frame, to guarantee that video track can be decoded.
 
-TOOD: Is there a graceful way to close the connection?  Is there GOAWAY-like
-behavior so the client knows to make a new connection before the old one breaks?
+Reconnect can be initiate by the server if it needs to "go away" for maintenance. In this case
+server sends `GOAWAY` frame ({{goaway-frame}}) to gracefully close the connection. This
+allows client to establish new connection and continue sending data.
 
 # Wire Format
 
@@ -226,7 +244,7 @@ Predefined frame types:
 | 0x1 | connect ack frame |
 | 0x2 | reserved |
 | 0x3 | reserved |
-| 0x4 | reserved |
+| 0x4 | end of video frame |
 | 0x5 | error frame |
 | 0x6 | reserved |
 | 0x7 | reserved |
@@ -242,6 +260,7 @@ Predefined frame types:
 | 0x11 | reserved |
 | 0x12 | reserved |
 | 0x13 | reserved |
+| 0x14 | GOAWAY frame |
 
 ## Frames
 
@@ -317,6 +336,21 @@ connection.
 
 If the server receives a Connect Ack frame from the client, the client sends an
 Error frame with code `TBD`.
+
+### End of stream frame
+
+~~~
++--------------------------------------------------------------+
+|                       17                                     |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x4   |
++-------+
+~~~
+
+End of stream frame is sent by a client when it's done sending data and is about to close 
+the connection. Server SHOULD ignore all frames sent after that.
 
 ### Error frame
 
@@ -444,7 +478,7 @@ Supported type of codecs:
 |0x2| OPUS|
 
 Timestamp:
-: timestamp of first audio sample in Audio Data.  TODO: describe format
+: timestamp of first audio sample in Audio Data.
 
 Track ID:
 : ID of the track that this frame is on
@@ -470,6 +504,29 @@ For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with OPUS
 header as defined in {{!RFC7845}}
 
 
+### GOAWAY frame
+
+~~~
+0       1       2       3       4       5       6       7
++--------------------------------------------------------------+
+|                          17                                  |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x14  |
++-------+
+~~~
+
+The GOAWAY frame is used ot initiate shutdown of a connection. It allows server to 
+gracefully stop accepting new frames. This enables serrver maintanance.
+
+Upon receiving GOAWAY, client MUST send frames remaining in current GOP and stop
+sending new frames on this connection. Client SHOULD start new one and resume sending 
+frames on new connection. 
+
+Server sends GOAWAY frames but continues processing arriving frames for implementation
+defined time, after which server SHOULD close connection.
+
 ## Quic Mapping
 
 One of the main goals of the RUSH protocol was ability to provide applications a
@@ -478,12 +535,10 @@ using a special mode {{multi-stream-mode}}.
 
 ### Normal mode
 
-In normal mode, RUSH uses one QUIC stream to send data and one QUIC stream to
-receive data. Using one stream guarantees reliable, in-order delivery -
-applications can rely on QUIC transport layer to retransmit lost packets.  The
-performance characteristics of this mode are similar to RTMP over TCP.
-
-TODO: isn't it 1 bidirectional stream?
+In normal mode, RUSH uses one bidirectional QUIC stream to send data and receive data. 
+Using one stream guarantees reliable, in-order delivery - applications can rely on QUIC 
+transport layer to retransmit lost packets.  The performance characteristics of this mode are
+similar to RTMP over TCP.
 
 ### Multi Stream Mode
 
@@ -511,7 +566,8 @@ The client MAY control delivery reliability by setting a delivery timer for
 every audio or video frame and reset the QUIC stream when timer fires.  This
 will effectively stop retransmissions if frame wasn't fully delivered in time.
 
-TODO: Is there a way for the client and server to negotiate this timer?
+Timeout is implementation defined, however future versions of the draft will define a way
+to negotiate it.
 
 # Error Handling
 
@@ -552,12 +608,8 @@ codes ({{error-frame}}), or new audio and video codecs ({{audio-frame}},
 {{video-frame}}).
 
 Implementations MUST ignore unknown or unsupported values in all extensible
-protocol elements.  Implementations MUST discard frames that have unknown or
-unsupported types.  This means that any of these extension points can be safely
-used by extensions without prior arrangement or negotiation.
-
-TODO: Is this correct?  eg if a server doesn't support the codec doesn't it need
-to return an Error frame?
+protocol elements, except `codec id`.  Implementations MUST discard frames that have 
+unknown or unsupported types.
 
 # Security Considerations
 
