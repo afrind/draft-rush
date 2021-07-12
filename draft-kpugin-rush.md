@@ -185,7 +185,7 @@ implememtation defined timeout, if frame `#4` hasn't arrived, server SHOULD cont
 processing frames `5` and `6`
 
 
-When client is done streaming, it sends `End of stream` frame ({{end-of-stream-frame}})
+When client is done streaming, it sends `End of video` frame ({{end-of-video-frame}})
 to indicate to the server that there won't be any more data sent.
 
 ## Reconnect
@@ -335,7 +335,7 @@ connection.
 If the server receives a Connect Ack frame from the client, the client sends an
 Error frame with code `TBD`.
 
-### End of stream frame
+### End of video frame
 
 ~~~
 +--------------------------------------------------------------+
@@ -347,7 +347,7 @@ Error frame with code `TBD`.
 +-------+
 ~~~
 
-End of stream frame is sent by a client when it's done sending data and is about to close 
+End of video frame is sent by a client when it's done sending data and is about to close 
 the connection. Server SHOULD ignore all frames sent after that.
 
 ### Error frame
