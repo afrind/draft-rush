@@ -1,6 +1,6 @@
-# RUSH - Realtime Updated dynamic adaptive Streaming over HTTP
+# RUSH - Reliable (unreliable) streaming protocol
 
-This is the working area for the individual Internet-Draft, "RUSH - Realtime Updated dynamic adaptive Streaming over HTTP".
+This is the working area for the individual Internet-Draft, "RUSH - Reliable (unreliable) streaming protocol".
 
 * [Editor's Copy](https://afrind.github.io/draft-rush/#go.draft-frindell-rush.html)
 * [Individual Draft](https://datatracker.ietf.org/doc/html/draft-frindell-rush)
