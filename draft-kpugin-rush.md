@@ -112,7 +112,8 @@ ASC:
 
 GOP:
 
-: Group of pictures, specifies the order in which intra- and inter-frames are arranged.
+: Group of pictures, specifies the order in which intra- and inter-frames are
+arranged.
 
 
 # Theory of Operations
@@ -126,10 +127,10 @@ After the QUIC connection is established, client creates a new bidirectional
 QUIC stream, choses starting frame ID and sends `Connect` frame
 {{connect-frame}} over that stream.  This stream is called the Connect Stream.
 
-Client sends `mode of operation` setting in `Connect` frame payload, format of the 
-payload is `TBD`.
+Client sends `mode of operation` setting in `Connect` frame payload, format of
+the payload is `TBD`.
 
-One connection SHOULD only be used to send one video. 
+One connection SHOULD only be used to send one video.
 
 ## Sending Video Data
 
@@ -142,16 +143,18 @@ server.  The frames carry a unique, monotonically increasing frame ID and a
 timestamp.  The timestamp fields are encoded on a timescale specified by
 `Connect` frame.
 
-Track is a logical organization of tha data, for example, video can have one video track,
-and two audio tracks (for two languages). It's up to the client to choose unique Track ID for
-every track in the video. Client can send data for multiple tracks simultaneously.  
+Track is a logical organization of tha data, for example, video can have one
+video track, and two audio tracks (for two languages). It's up to the client to
+choose unique Track ID for every track in the video. Client can send data for
+multiple tracks simultaneously.
 
-Each track has it's own monotonically increasing frame ID sequence. Client MUST start with
-initial frame ID = 1. ID of first frame that server receives for a given track is used as a start 
-of that sequence. There is potential race condition, if `Multi Stream Mode` 
-({{multi-stream-mode}}) is used, frames can arrive out of order, if frame with ID = N arrives 
-first, all frames with IDs < N will be discarded by server (TODO: add a way to negotiate 
-start of the frame ID sequence).
+Each track has it's own monotonically increasing frame ID sequence. Client MUST
+start with initial frame ID = 1. ID of first frame that server receives for a
+given track is used as a start of that sequence. There is potential race
+condition, if `Multi Stream Mode` ({{multi-stream-mode}}) is used, frames can
+arrive out of order, if frame with ID = N arrives first, all frames with IDs < N
+will be discarded by server (TODO: add a way to negotiate start of the frame ID
+sequence).
 
 Depending on mode of operation ({{quic-mapping}}), the client sends audio and
 video frames on the Connect stream or on an new QUIC stream for each frame.
@@ -178,28 +181,31 @@ sequence ID on a given track MAY indicate out of order delivery and then server
 MAY wait until missing frames arrive. Server must consider frame completely lost
 if corresponding QUIC stream was reset.
 
-Server upon detecting gap in frame MAY wait for implemetnation defined time, if missing
-frames didn't arrive, server SHOULD ignore them and continue processing rest of 
-the frames. For example if server recieves frames for track 1: `1 2 3 5 6`, after 
-implememtation defined timeout, if frame `#4` hasn't arrived, server SHOULD continue 
-processing frames `5` and `6`
+Server upon detecting gap in frame MAY wait for implemetnation defined time, if
+missing frames didn't arrive, server SHOULD ignore them and continue processing
+rest of the frames. For example if server recieves frames for track 1: `1 2 3 5
+6`, after implememtation defined timeout, if frame `#4` hasn't arrived, server
+SHOULD continue processing frames `5` and `6`
 
 
-When client is done streaming, it sends `End of video` frame ({{end-of-video-frame}})
-to indicate to the server that there won't be any more data sent.
+When client is done streaming, it sends `End of video` frame
+({{end-of-video-frame}}) to indicate to the server that there won't be any more
+data sent.
 
 ## Reconnect
 
 If the QUIC connection is closed at any point, client MAY reconnect by simply
 repating `Connection establishment` process ({{connection-establishment}}).
 
-Client can resume sending same video where it left off. In order to support termination of
-new connection by a new server, client SHOULD resume sending video frames starting with
-I-frame, to guarantee that video track can be decoded.
+Client can resume sending same video where it left off. In order to support
+termination of new connection by a new server, client SHOULD resume sending
+video frames starting with I-frame, to guarantee that video track can be
+decoded.
 
-Reconnect can be initiate by the server if it needs to "go away" for maintenance. In this case
-server sends `GOAWAY` frame ({{goaway-frame}}) to gracefully close the connection. This
-allows client to establish new connection and continue sending data.
+Reconnect can be initiate by the server if it needs to "go away" for
+maintenance. In this case server sends `GOAWAY` frame ({{goaway-frame}}) to
+gracefully close the connection. This allows client to establish new connection
+and continue sending data.
 
 # Wire Format
 
@@ -347,8 +353,8 @@ Error frame with code `TBD`.
 +-------+
 ~~~
 
-End of video frame is sent by a client when it's done sending data and is about to close 
-the connection. Server SHOULD ignore all frames sent after that.
+End of video frame is sent by a client when it's done sending data and is about
+to close the connection. Server SHOULD ignore all frames sent after that.
 
 ### Error frame
 
@@ -515,15 +521,15 @@ header as defined in {{!RFC7845}}
 +-------+
 ~~~
 
-The GOAWAY frame is used ot initiate shutdown of a connection. It allows server to 
-gracefully stop accepting new frames. This enables serrver maintanance.
+The GOAWAY frame is used ot initiate shutdown of a connection. It allows server
+to gracefully stop accepting new frames. This enables serrver maintanance.
 
 Upon receiving GOAWAY, client MUST send frames remaining in current GOP and stop
-sending new frames on this connection. Client SHOULD start new one and resume sending 
-frames on new connection. 
+sending new frames on this connection. Client SHOULD start new one and resume
+sending frames on new connection.
 
-Server sends GOAWAY frames but continues processing arriving frames for implementation
-defined time, after which server SHOULD close connection.
+Server sends GOAWAY frames but continues processing arriving frames for
+implementation defined time, after which server SHOULD close connection.
 
 ## Quic Mapping
 
@@ -533,10 +539,10 @@ using a special mode {{multi-stream-mode}}.
 
 ### Normal mode
 
-In normal mode, RUSH uses one bidirectional QUIC stream to send data and receive data. 
-Using one stream guarantees reliable, in-order delivery - applications can rely on QUIC 
-transport layer to retransmit lost packets.  The performance characteristics of this mode are
-similar to RTMP over TCP.
+In normal mode, RUSH uses one bidirectional QUIC stream to send data and receive
+data.  Using one stream guarantees reliable, in-order delivery - applications
+can rely on QUIC transport layer to retransmit lost packets.  The performance
+characteristics of this mode are similar to RTMP over TCP.
 
 ### Multi Stream Mode
 
@@ -564,8 +570,8 @@ The client MAY control delivery reliability by setting a delivery timer for
 every audio or video frame and reset the QUIC stream when timer fires.  This
 will effectively stop retransmissions if frame wasn't fully delivered in time.
 
-Timeout is implementation defined, however future versions of the draft will define a way
-to negotiate it.
+Timeout is implementation defined, however future versions of the draft will
+define a way to negotiate it.
 
 # Error Handling
 
@@ -606,8 +612,8 @@ codes ({{error-frame}}), or new audio and video codecs ({{audio-frame}},
 {{video-frame}}).
 
 Implementations MUST ignore unknown or unsupported values in all extensible
-protocol elements, except `codec id`.  Implementations MUST discard frames that have 
-unknown or unsupported types.
+protocol elements, except `codec id`.  Implementations MUST discard frames that
+have unknown or unsupported types.
 
 # Security Considerations
 
