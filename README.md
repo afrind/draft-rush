@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "RUSH - Reliable (unreliable) streaming protocol".
 
-* [Editor's Copy](https://afrind.github.io/draft-rush/#go.draft-frindell-rush.html)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-frindell-rush)
-* [Compare Editor's Copy to Individual Draft](https://afrind.github.io/draft-rush/#go.draft-frindell-rush.diff)
+* [Editor's Copy](https://afrind.github.io/draft-rush/#go.draft-kpugin-rush.html)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-kpugin-rush)
+* [Compare Editor's Copy to Individual Draft](https://afrind.github.io/draft-rush/#go.draft-kpugin-rush.diff)
 
 ## Building the Draft
 
