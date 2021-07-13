@@ -20,12 +20,12 @@ subject to a Simplified BSD License) in Contributions.
 ## Other Resources
 
 Discussion of this work occurs on the
-[rush working group mailing list](https://mailarchive.ietf.org/arch/browse/rush/)
-([subscribe](https://www.ietf.org/mailman/listinfo/rush)).  In addition to
+[avtcore working group mailing list](https://mailarchive.ietf.org/arch/browse/avt/)
+([subscribe](https://www.ietf.org/mailman/listinfo/avt)).  In addition to
 contributions in GitHub, you are encouraged to participate in discussions there.
 
 **Note**: Some working groups adopt a policy whereby substantive discussion of
 technical issues needs to occur on the mailing list.
 
 You might also like to familiarize yourself with other
-[working group documents](https://datatracker.ietf.org/wg/rush/documents/).
+[working group documents](https://datatracker.ietf.org/wg/avt/documents/).
