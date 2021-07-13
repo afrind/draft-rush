@@ -45,13 +45,13 @@ informative:
 --- abstract
 
 RUSH is an application-level protocol for ingesting live video.
-This document describes core of the protocol and how it maps onto QUIC
+This document describes the protocol and how it maps onto QUIC.
 
 --- middle
 
 # Introduction
 
-RUSH is bidirectional application level protocol designed for live video
+RUSH is a bidirectional application level protocol designed for live video
 ingestion that runs on top of QUIC.
 
 RUSH was built as a replacement for RTMP (Real-Time Messaging Protocol) with the
