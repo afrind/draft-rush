@@ -523,7 +523,7 @@ After sending a GOAWAY frame, the server continues processing arriving frames
 for an implementation defined time, after which the server SHOULD close
 the connection.
 
-## Quic Mapping
+## QUIC Mapping
 
 One of the main goals of the RUSH protocol was ability to provide applications a
 way to control reliability of delivering audio/video data. This is achieved by
