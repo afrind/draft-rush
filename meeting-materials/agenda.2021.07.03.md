@@ -1,0 +1,40 @@
+# Video Ingest over QUIC side meeting
+
+* [Bluejeans](https://bluejeans.com/349851322) Video conference
+* [Minutes](https://codimd.ietf.org/W_IANtwnRLmYOkvfbQoOJA)
+* [Meeting chat](xmpp:vioq@jabber.ietf.org?join)
+
+## Friday, Jul 30, 2021  11:00-12:00
+
+### Administrivia
+
+5 min total
+
+* Attendance sheets
+* Agenda bashing
+
+### Reliable (unreliable) streaming protocol
+
+Kirill Pugin - 10 min
+
+https://www.ietf.org/archive/id/draft-kpugin-rush-00.html
+
+### SRT over QUIC Datagram
+
+Maxim Sharabayko - 10 min
+
+https://haivision.github.io/srt-rfc/draft-sharabayko-srt-over-quic.html
+https://tools.ietf.org/html/draft-sharabayko-srt-00
+
+### RTP over QUIC Datagram
+
+Jörg Ott - 10 min
+
+
+### General Discussion
+
+15 minutes
+
+### Logistics and next steps
+
+10 minutes
