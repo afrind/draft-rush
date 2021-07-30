@@ -1,6 +1,8 @@
 # Video Ingest over QUIC side meeting
 
-* [Bluejeans](https://bluejeans.com/349851322) Video conference
+## Switched from Bluejeans to Zoom!
+
+* [Zoom](https://fb.zoom.us/j/96613780902) Zoom, passcode 061119
 * [Minutes](https://codimd.ietf.org/W_IANtwnRLmYOkvfbQoOJA)
 * [Meeting chat](xmpp:vioq@jabber.ietf.org?join)
 
