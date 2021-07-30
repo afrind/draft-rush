@@ -2,9 +2,9 @@
 
 ## Switched from Bluejeans to Zoom!
 
-* [Zoom](https://fb.zoom.us/j/96613780902) Zoom, passcode 061119
+* [Zoom](https://fb.zoom.us/j/96613780902) passcode 061119
 * [Minutes](https://codimd.ietf.org/W_IANtwnRLmYOkvfbQoOJA)
-* [Meeting chat](xmpp:vioq@jabber.ietf.org?join)
+* [Meeting chat](xmpp:vioq@jabber.ietf.org?join) vioq@jabber.ietf.org
 
 ## Friday, Jul 30, 2021  11:00-12:00
 
