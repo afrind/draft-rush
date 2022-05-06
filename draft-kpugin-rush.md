@@ -276,18 +276,18 @@ Predefined frame types:
 +--------------------------------------------------------------+
 ~~~
 
-Version:
+Version (unsigned 8bits):
 : version of the protocol (initial version is 0x0).
 
-Video Timescale:
+Video Timescale(unsigned 16bits):
 : timescale for all video frame timestamps on this connection. Recommended value
 30000
 
-Audio Timescale:
+Audio Timescale(unsigned 16bits):
 : timescale for all audio samples timestamps on this connection, recommended
 value same as audio sample rate, for example 44100
 
-Live Session ID:
+Live Session ID(unsigned 64bits):
 : identifier of broadcast, when reconnect, client MUST use the same live session
 ID
 
@@ -312,7 +312,7 @@ Error frame with code `TBD`.
 ~~~
 0       1       2       3       4       5       6       7
 +--------------------------------------------------------------+
-|                          17                                  |
+|                       Length (64) = 17                       |
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+------------------------------------------------------+
@@ -337,7 +337,7 @@ Error frame with code `TBD`.
 
 ~~~
 +--------------------------------------------------------------+
-|                       17                                     |
+|                       Length (64) = 17                       |
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+------------------------------------------------------+
@@ -352,7 +352,7 @@ to close the connection. The server SHOULD ignore all frames sent after that.
 
 ~~~
 +--------------------------------------------------------------+
-|                       29                                     |
+|                       Length (64) = 29                       |
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+------------------------------------------------------+
@@ -364,12 +364,12 @@ to close the connection. The server SHOULD ignore all frames sent after that.
 +------------------------------+
 ~~~
 
-Sequence ID:
+Sequence ID(unsigned 64bits):
 : ID of the frame sent by the client that error is generated for, ID=0x0
 indicates connection level error.
 
-Error Code:
-: 32 bit unsigned integer
+Error Code(unsigned 32bits):
+: Indicates the error code 
 
 Error frame can be sent by the client or the server to indicate that an error
 occurred.
@@ -386,23 +386,25 @@ frame.
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+-------+----------------------------------------------+
-| 0xD   | Codec |
+|  0xD  | Codec |
 +-------+-------+----------------------------------------------+
 |                        PTS (64)                              |
 +--------------------------------------------------------------+
-|                        Track ID (64)                         |
-+---------------+----------------------------------------------+
-| I-Frame ID Offset | Video Data ...                           |
+|                        DTS (64)                              |
++-------+------------------------------------------------------+
+|TrackID|                                                      |
++-------+-------+----------------------------------------------+
+| I Offset      | Video Data ...                               |
 +---------------+----------------------------------------------+
 ~~~
 
-Codec:
+Codec (unsigned 8bits):
 : specifies codec that was used to encode this frame.
 
-PTS:
+PTS (unsigned 64bits):
 : presentation timestamp in connection video timescale
 
-DTS:
+DTS (unsigned 64bits):
 : decoding timestamp in connection video timescale
 
 Supported type of codecs:
@@ -415,10 +417,10 @@ Supported type of codecs:
 |0x4| VP9|
 
 
-Track ID:
+Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
-I-Frame ID Offset:
+I Offset (unsigned 16bits):
 : Distance from sequence ID of the I-frame that is required before this frame
 can be decoded. This can be useful to decide if frame can be dropped.
 
@@ -463,7 +465,7 @@ loss MUST produce VALID h264/h265 bitstream.
 +--------------------------------------------------------------+
 ~~~
 
-Codec:
+Codec (unsigned 8bits):
 : specifies codec that was used to encode this frame.
 
 Supported type of codecs:
@@ -473,10 +475,10 @@ Supported type of codecs:
 |0x1| AAC|
 |0x2| OPUS|
 
-Timestamp:
+Timestamp (unsigned 8bits):
 : timestamp of first audio sample in Audio Data.
 
-Track ID:
+Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
 Audio Data:
@@ -509,7 +511,7 @@ header as defined in {{!RFC7845}}
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+------------------------------------------------------+
-| 0x14  |
+| 0x15  |
 +-------+
 ~~~
 
