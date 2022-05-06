@@ -256,7 +256,8 @@ Predefined frame types:
 | 0x11 | reserved |
 | 0x12 | reserved |
 | 0x13 | reserved |
-| 0x14 | GOAWAY frame |
+| 0x14 | reserved |
+| 0x15 | GOAWAY frame |
 
 ## Frames
 
