@@ -18,22 +18,22 @@ author:
     ins: K. Pugin
     name: Kirill Pugin
     organization: Facebook
-    email: ikir@fb.com
+    email: ikir@meta.com
  -
     ins: A. Frindell
     name: Alan Frindell
     organization: Facebook
-    email: afrind@fb.com
+    email: afrind@meta.com
  -
     ins: J. Cenzano
     name: Jordi Cenzano
     organization: Facebook
-    email: jcenzano@fb.com
+    email: jcenzano@meta.com
  -
     ins: J. Weissman
     name: Jake Weissman
     organization: Facebook
-    email: jakeweissman@fb.com
+    email: jakeweissman@meta.com
 
 normative:
   RFC2119:
@@ -250,13 +250,13 @@ Predefined frame types:
 | 0XB | reserved |
 | 0xC | reserved |
 | 0xD | video frame |
-| 0xE | audio frame |
+| 0xE | reserved |
 | 0XF | reserved |
 | 0X10 | reserved |
 | 0x11 | reserved |
 | 0x12 | reserved |
 | 0x13 | reserved |
-| 0x14 | reserved |
+| 0x14 | audio frame |
 | 0x15 | GOAWAY frame |
 
 ## Frames
@@ -456,13 +456,13 @@ loss MUST produce VALID h264/h265 bitstream.
 +--------------------------------------------------------------+
 |                       ID (64)                                |
 +-------+------------------------------------------------------+
-| 0xE   | Codec |
+| 0x14  | Codec |
 +-------+-------+----------------------------------------------+
 |                      Timestamp (64)                          |
-+-------+------------------------------------------------------+
-|TrackID|
-+-------+------------------------------------------------------+
-| Audio Data ...
++-------+-------+-------+--------------------------------------+
+|TrackID|   Header Len  |
++-------+-------+-------+--------------------------------------+
+| Header + Audio Data ...
 +--------------------------------------------------------------+
 ~~~
 
@@ -482,25 +482,19 @@ Timestamp (unsigned 8bits):
 Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
-Audio Data:
-: variable length field, that carries 1 or more audio frames that is codec
+Header Len (unsigned 8bits):
+: Length in bytes of the audio header contained in the first portion of the payload
+
+Audio Data (variable length field):
+: it carries the audio header in XXX format and 1 or more audio frames that is codec
 dependent.
 
-For AAC codec, "Audio Data" are 1 or more AAC samples, prefixed with ADTS
-HEADER:
+For AAC codec:
+- "Audio Data" are 1 or more AAC samples, prefixed with Audio Specific Config (ASC) header defined in {{!ISO 14496-3}}
+- Binary concatenation of all AAC samples in "Audio Data" from consecutive audio frames, without data loss MUST produce VALID AAC bitstream.
 
-~~~
-152        158       ...     N
-+---+---+---+---+---+---+---+...
-| ADTS(56)  |  AAC SAMPLE   |
-+---+---+---+---+---+---+---+...
-~~~
-
-Binary concatenation of all AAC samples in "Audio Data" from consecutive audio
-frames, without data loss MUST produce VALID AAC bitstream.
-
-For OPUS codec, "Audio Data" are 1 or more OPUS samples, prefixed with OPUS
-header as defined in {{!RFC7845}}
+For OPUS codec:
+- "Audio Data" are 1 or more OPUS samples, prefixed with OPUS header as defined in {{!RFC7845}}
 
 
 ### GOAWAY frame
