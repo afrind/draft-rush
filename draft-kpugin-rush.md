@@ -370,7 +370,7 @@ Sequence ID(unsigned 64bits):
 indicates connection level error.
 
 Error Code(unsigned 32bits):
-: Indicates the error code 
+: Indicates the error code
 
 Error frame can be sent by the client or the server to indicate that an error
 occurred.
