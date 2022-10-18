@@ -490,7 +490,7 @@ Audio Data (variable length field):
 dependent.
 
 For AAC codec:
-- "Audio Data" are 1 or more AAC samples, prefixed with Audio Specific Config (ASC) header defined in {{!ISO14496-3}}
+- "Audio Data" are 1 or more AAC samples, prefixed with Audio Specific Config (ASC) header defined in `ISO 14496-3`
 - Binary concatenation of all AAC samples in "Audio Data" from consecutive audio frames, without data loss MUST produce VALID AAC bitstream.
 
 For OPUS codec:
