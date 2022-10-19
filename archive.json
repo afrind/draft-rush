@@ -1,0 +1,258 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2021-07-25T00:53:07.959325+00:00",
+  "repo": "afrind/draft-rush",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [
+    {
+      "number": 3,
+      "id": "MDU6SXNzdWU5NDM3MDI5OTI=",
+      "title": "Mailing List",
+      "url": "https://github.com/afrind/draft-rush/issues/3",
+      "state": "CLOSED",
+      "author": "j0sh",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Excited for this project, looking forward to discussing it. Seems that the mailing list in the [contribution guidelines](https://github.com/afrind/draft-rush/blob/main/CONTRIBUTING.md) doesn't exist?",
+      "createdAt": "2021-07-13T18:12:07Z",
+      "updatedAt": "2021-07-13T19:36:14Z",
+      "closedAt": "2021-07-13T19:36:14Z",
+      "comments": [
+        {
+          "author": "afrind",
+          "authorAssociation": "OWNER",
+          "body": "Oops - I think the template generated that automatically.  Right now I emailed a few different IETF lists to gauge interest, looks like the discussion may be happening in avtcore for now.  I'll update the doc to reflect that.",
+          "createdAt": "2021-07-13T19:32:29Z",
+          "updatedAt": "2021-07-13T19:32:29Z"
+        }
+      ]
+    }
+  ],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "MDExOlB1bGxSZXF1ZXN0Njg2OTE4MDAx",
+      "title": "Editorial pass, plus TODOs",
+      "url": "https://github.com/afrind/draft-rush/pull/1",
+      "state": "MERGED",
+      "author": "afrind",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2021-07-09T16:45:02Z",
+      "updatedAt": "2021-07-12T17:39:08Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "2252443221e7270502064345e3976d67a7aee7e7",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "editorial-todos",
+      "headRefOid": "3c21465ea566dd70f2167bd17c89f9a53f16c85b",
+      "closedAt": "2021-07-12T17:39:08Z",
+      "mergedAt": "2021-07-12T17:39:08Z",
+      "mergedBy": "afrind",
+      "mergeCommit": {
+        "oid": "5fe97382ccd1d01026488af017e144342ef7e345"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzAzMjM2MDUy",
+          "commit": {
+            "abbreviatedOid": "8644d41"
+          },
+          "author": "kpugin",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2021-07-09T16:55:58Z",
+          "updatedAt": "2021-07-09T17:05:39Z",
+          "comments": [
+            {
+              "originalPosition": 218,
+              "body": "Yeah, I need to check our implementation, should be 1 bidir stream",
+              "createdAt": "2021-07-09T16:55:58Z",
+              "updatedAt": "2021-07-09T17:05:39Z"
+            },
+            {
+              "originalPosition": 303,
+              "body": "Agree, will change that",
+              "createdAt": "2021-07-09T16:58:04Z",
+              "updatedAt": "2021-07-09T17:05:39Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "id": "MDExOlB1bGxSZXF1ZXN0Njg4MDE5ODA5",
+      "title": "Update draft-kpugin-rush.md",
+      "url": "https://github.com/afrind/draft-rush/pull/2",
+      "state": "MERGED",
+      "author": "kpugin",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "resolving TODOs",
+      "createdAt": "2021-07-12T17:12:17Z",
+      "updatedAt": "2021-07-12T17:37:13Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "editorial-todos",
+      "baseRefOid": "8644d41dcb247069550a883a4340ceb463d108f6",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "todos",
+      "headRefOid": "1d1dd9324dac5f98f9149832223dc69c201403f9",
+      "closedAt": "2021-07-12T17:37:13Z",
+      "mergedAt": "2021-07-12T17:37:13Z",
+      "mergedBy": "afrind",
+      "mergeCommit": {
+        "oid": "3c21465ea566dd70f2167bd17c89f9a53f16c85b"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzA0MzU4NzI3",
+          "commit": {
+            "abbreviatedOid": "bdbe91d"
+          },
+          "author": "afrind",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-07-12T17:16:57Z",
+          "updatedAt": "2021-07-12T17:18:51Z",
+          "comments": [
+            {
+              "originalPosition": 72,
+              "body": "Is it end of stream or end of video?",
+              "createdAt": "2021-07-12T17:16:58Z",
+              "updatedAt": "2021-07-12T17:18:51Z"
+            },
+            {
+              "originalPosition": 99,
+              "body": "stream?",
+              "createdAt": "2021-07-12T17:17:12Z",
+              "updatedAt": "2021-07-12T17:18:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzA0MzYzMzQ2",
+          "commit": {
+            "abbreviatedOid": "41bed15"
+          },
+          "author": "kpugin",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-07-12T17:22:12Z",
+          "updatedAt": "2021-07-12T17:22:12Z",
+          "comments": [
+            {
+              "originalPosition": 99,
+              "body": "should be 'video' to not confuse with QUIC streams :D",
+              "createdAt": "2021-07-12T17:22:12Z",
+              "updatedAt": "2021-07-12T17:22:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzA0MzYzODA0",
+          "commit": {
+            "abbreviatedOid": "1d1dd93"
+          },
+          "author": "kpugin",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-07-12T17:22:41Z",
+          "updatedAt": "2021-07-12T17:22:41Z",
+          "comments": [
+            {
+              "originalPosition": 72,
+              "body": "video",
+              "createdAt": "2021-07-12T17:22:41Z",
+              "updatedAt": "2021-07-12T17:22:41Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "id": "MDExOlB1bGxSZXF1ZXN0Njk2MTQ1MjEz",
+      "title": "Capitalize QUIC in section title",
+      "url": "https://github.com/afrind/draft-rush/pull/4",
+      "state": "MERGED",
+      "author": "zhihan",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "as title",
+      "createdAt": "2021-07-23T18:46:25Z",
+      "updatedAt": "2021-07-23T18:47:13Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "19c676b55c477aa87e3593db35cad83033d105d0",
+      "headRepository": "zhihan/draft-rush",
+      "headRefName": "patch-1",
+      "headRefOid": "f9a57f44216bc1618e143b80a859618edbacca00",
+      "closedAt": "2021-07-23T18:47:13Z",
+      "mergedAt": "2021-07-23T18:47:13Z",
+      "mergedBy": "afrind",
+      "mergeCommit": {
+        "oid": "81998e4f0492751ee97d5ac21c2029485c1d6ad5"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}

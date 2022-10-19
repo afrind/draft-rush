@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>RUSH - Reliable (unreliable) streaming protocol</title>
+<meta content="Kirill Pugin" name="author">
+<meta content="Alan Frindell" name="author">
+<meta content="Jordi Cenzano" name="author">
+<meta content="Jake Weissman" name="author">
+<meta content="
+       RUSH is an application-level protocol for ingesting live video.
+This document describes the protocol and how it maps onto QUIC. 
+    " name="description">
+<meta content="xml2rfc 3.15.1" name="generator">
+<meta content="Internet-Draft" name="keyword">
+<meta content="draft-kpugin-rush-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.15.1
+    Python 3.10.5
+    appdirs 1.4.4
+    ConfigArgParse 1.5.3
+    google-i18n-address 2.5.2
+    html5lib 1.1
+    intervaltree 3.1.0
+    Jinja2 3.1.2
+    kitchen 1.2.6
+    lxml 4.9.1
+    MarkupSafe 2.1.1
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.27.1
+    setuptools 59.4.0
+    six 1.16.0
+-->
+<link href="draft-kpugin-rush.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cabin Condensed", sans-serif;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+}
+:is(ol, ul) :is(ol, ul) {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+  min-width: 20ch;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+dl .break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href].selfRef {
+  color: var(--text-color);
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    overflow-x: auto;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+}
+a.pilcrow[href] { color: var(--pilcrow-weak); }
+a.pilcrow[href]:hover { text-decoration: none; }
+@media not print {
+  :hover > a.pilcrow {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+}
+#identifiers dt {
+  width: var(--identifier-width);
+  min-width: var(--identifier-width);
+  clear: left;
+  float: left;
+  text-align: right;
+}
+#identifiers dd {
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
+  min-width: 5em;
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+#toc nav ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+#toc nav li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+#toc a.xref {
+  white-space: normal;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
+.references dd {
+  margin-left: 8em !important;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc.active {
+      opacity: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 8px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active nav {
+    display: block;
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin-top: 2px;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #toc nav > ul  {
+    margin-bottom: 2em;
+  }
+  #toc ul {
+    margin: 0 0 0 4px;
+    font-size: var(--small-font-size);
+  }
+  #toc ul :is(p, li) {
+    margin: 2px 0;
+    line-height: 22px;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Changes introduced to fix issues found during implementation */
+
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin: 8px 0.5em 0;
+}
+
+/* Provide styling for table cell text alignment */
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 20em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  dd {
+    page-break-before: avoid;
+  }
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([stroke="fill"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">rush</td>
+<td class="right">October 2022</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Pugin, et al.</td>
+<td class="center">Expires 21 April 2023</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">TODO Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-kpugin-rush-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2022-10-18" class="published">18 October 2022</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2023-04-21">21 April 2023</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">K. Pugin</div>
+<div class="org">Facebook</div>
+</div>
+<div class="author">
+      <div class="author-name">A. Frindell</div>
+<div class="org">Facebook</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Cenzano</div>
+<div class="org">Facebook</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Weissman</div>
+<div class="org">Facebook</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">RUSH - Reliable (unreliable) streaming protocol</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">RUSH is an application-level protocol for ingesting live video.
+This document describes the protocol and how it maps onto QUIC.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-discussion-venues">
+<a href="#name-discussion-venues" class="section-name selfRef">Discussion Venues</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">Discussion of this document takes place on the
+    mailing list (),
+  which is archived at <span><a href=""></a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+  <span><a href="https://github.com/afrind/draft-rush">https://github.com/afrind/draft-rush</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 21 April 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2022 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-theory-of-operations" class="internal xref">Theory of Operations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-connection-establishment" class="internal xref">Connection establishment</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-sending-video-data" class="internal xref">Sending Video Data</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-receiving-data" class="internal xref">Receiving data</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-reconnect" class="internal xref">Reconnect</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-wire-format" class="internal xref">Wire Format</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-frame-header" class="internal xref">Frame Header</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-frames" class="internal xref">Frames</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.1">
+                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="auto internal xref">4.2.1</a>.  <a href="#name-connect-frame" class="internal xref">Connect frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
+                    <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="auto internal xref">4.2.2</a>.  <a href="#name-connect-ack-frame" class="internal xref">Connect Ack frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.3">
+                    <p id="section-toc.1-1.4.2.2.2.3.1"><a href="#section-4.2.3" class="auto internal xref">4.2.3</a>.  <a href="#name-end-of-video-frame" class="internal xref">End of Video frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.4">
+                    <p id="section-toc.1-1.4.2.2.2.4.1"><a href="#section-4.2.4" class="auto internal xref">4.2.4</a>.  <a href="#name-error-frame" class="internal xref">Error frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.5">
+                    <p id="section-toc.1-1.4.2.2.2.5.1"><a href="#section-4.2.5" class="auto internal xref">4.2.5</a>.  <a href="#name-video-frame" class="internal xref">Video frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.6">
+                    <p id="section-toc.1-1.4.2.2.2.6.1"><a href="#section-4.2.6" class="auto internal xref">4.2.6</a>.  <a href="#name-audio-frame" class="internal xref">Audio frame</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.7">
+                    <p id="section-toc.1-1.4.2.2.2.7.1"><a href="#section-4.2.7" class="auto internal xref">4.2.7</a>.  <a href="#name-goaway-frame" class="internal xref">GOAWAY frame</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-quic-mapping" class="internal xref">QUIC Mapping</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3.2.1">
+                    <p id="section-toc.1-1.4.2.3.2.1.1"><a href="#section-4.3.1" class="auto internal xref">4.3.1</a>.  <a href="#name-normal-mode" class="internal xref">Normal mode</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3.2.2">
+                    <p id="section-toc.1-1.4.2.3.2.2.1"><a href="#section-4.3.2" class="auto internal xref">4.3.2</a>.  <a href="#name-multi-stream-mode" class="internal xref">Multi Stream Mode</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-error-handling" class="internal xref">Error Handling</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-connection-errors" class="internal xref">Connection Errors</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-frame-errors" class="internal xref">Frame errors</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-extensions" class="internal xref">Extensions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">RUSH is a bidirectional application level protocol designed for live video
+ingestion that runs on top of QUIC.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">RUSH was built as a replacement for RTMP (Real-Time Messaging Protocol) with the
+goal to provide support for new audio and video codecs, extensibility in the
+form of new message types, and multi-track support. In addition, RUSH gives
+applications option to control data delivery guarantees by utilizing QUIC
+streams.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document describes the RUSH protocol, wire format, and QUIC mapping.<a href="#section-1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span>
+when, and only when, they appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-2">
+        <dt id="section-2-2.1">Frame/Message:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.2">
+          <p id="section-2-2.2.1">logical unit of information that client and server can exchange<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.3">PTS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.4">
+          <p id="section-2-2.4.1">presentation timestamp<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.5">DTS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.6">
+          <p id="section-2-2.6.1">decoding timestamp<a href="#section-2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.7">AAC:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.8">
+          <p id="section-2-2.8.1">advanced audio codec<a href="#section-2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.9">NALU:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.10">
+          <p id="section-2-2.10.1">network abstract layer unit<a href="#section-2-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.11">VPS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.12">
+          <p id="section-2-2.12.1">video parameter set (H265 video specific NALU)<a href="#section-2-2.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.13">SPS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.14">
+          <p id="section-2-2.14.1">sequence parameter set (H264/H265 video specific NALU)<a href="#section-2-2.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.15">PPS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.16">
+          <p id="section-2-2.16.1">picture parameter set (H264/H265 video specific NALU)<a href="#section-2-2.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.17">ADTS header:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.18">
+          <p id="section-2-2.18.1"><em>Audio Data Transport Stream Header</em><a href="#section-2-2.18.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.19">ASC:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.20">
+          <p id="section-2-2.20.1">Audio specific config<a href="#section-2-2.20.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.21">GOP:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.22">
+          <p id="section-2-2.22.1">Group of pictures, specifies the order in which intra- and inter-frames are
+arranged.<a href="#section-2-2.22.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="theory-of-operations">
+<section id="section-3">
+      <h2 id="name-theory-of-operations">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-theory-of-operations" class="section-name selfRef">Theory of Operations</a>
+      </h2>
+<div id="connection-establishment">
+<section id="section-3.1">
+        <h3 id="name-connection-establishment">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-connection-establishment" class="section-name selfRef">Connection establishment</a>
+        </h3>
+<p id="section-3.1-1">In order to live stream using RUSH, the client establishes a QUIC connection
+using the ALPN token "rush".<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">After the QUIC connection is established, client creates a new bidirectional
+QUIC stream, choses starting frame ID and sends <code>Connect</code> frame
+<a href="#connect-frame" class="auto internal xref">Section 4.2.1</a> over that stream.  This stream is called the Connect Stream.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">The client sends <code>mode of operation</code> setting in <code>Connect</code> frame payload, format
+of the payload is <code>TBD</code>.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">One connection SHOULD only be used to send one video.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sending-video-data">
+<section id="section-3.2">
+        <h3 id="name-sending-video-data">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-sending-video-data" class="section-name selfRef">Sending Video Data</a>
+        </h3>
+<p id="section-3.2-1">The client can choose to wait for the <code>ConnectAck</code> frame <a href="#connect-ack-frame" class="auto internal xref">Section 4.2.2</a>
+or it can start sending data immediately after sending the <code>Connect</code> frame.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">A track is a logical organization of the data, for example, video can have one
+video track, and two audio tracks (for two languages). The client can send data
+for multiple tracks simultaneously.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">The encoded audio or video data of each track is serialized into frames (see
+<a href="#audio-frame" class="auto internal xref">Section 4.2.6</a> or <a href="#video-frame" class="auto internal xref">Section 4.2.5</a>) and transmitted from the client to the
+server.  Each track has its own monotonically increasing frame ID sequence. The
+client MUST start with initial frame ID = 1.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">Depending on mode of operation (<a href="#quic-mapping" class="auto internal xref">Section 4.3</a>), the client sends audio and
+video frames on the Connect stream or on a new QUIC stream for each frame.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.2-5">In <code>Multi Stream Mode</code> (<a href="#multi-stream-mode" class="auto internal xref">Section 4.3.2</a>), the client can stop sending a
+frame by resetting the corresponding QUIC stream. In this case, there is no
+guarantee that the frame was received by the server.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="receiving-data">
+<section id="section-3.3">
+        <h3 id="name-receiving-data">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-receiving-data" class="section-name selfRef">Receiving data</a>
+        </h3>
+<p id="section-3.3-1">Upon receiving <code>Connect</code> frame, the server replies with <code>ConnectAck</code> frame
+<a href="#connect-ack-frame" class="auto internal xref">Section 4.2.2</a> and prepares to receive audio/video data.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">It's possible that in <code>Multi Stream Mode</code> (<a href="#multi-stream-mode" class="auto internal xref">Section 4.3.2</a>), the server
+receives audio or video data before it receives the <code>Connect</code> frame.  The
+implementation can choose whether to buffer or drop the data.  The audio/video
+data cannot be interpreted correctly before the arrival of the <code>Connect</code> frame.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">In <code>Normal Mode</code> (<a href="#normal-mode" class="auto internal xref">Section 4.3.1</a>), it is guaranteed by the transport that
+frames arrive into the application layer in order they were sent.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-4">In <code>Multi Stream Mode</code>, it's possible that frames arrive at the application
+layer in a different order than they were sent, therefore the server MUST keep
+track of last received frame ID for every track that it receives. A gap in the
+frame sequence ID on a given track can indicate out of order delivery and the
+server MAY wait until missing frames arrive. The server must consider frame lost
+if the corresponding QUIC stream was reset.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+<p id="section-3.3-5">Upon detecting a gap in the frame sequence, the server MAY wait for the missing
+frames to arrive for an implementation defined time. If missing frames don't
+arrive, the server SHOULD consider them lost and continue processing rest of the
+frames. For example if the server receives the following frames for track 1: <code>1
+2 3 5 6</code> and frame <code>#4</code> hasn't arrived after implementation defined timeout,
+thee server SHOULD continue processing frames <code>5</code> and <code>6</code>.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
+<p id="section-3.3-6">When the client is done streaming, it sends the <code>End of Video</code> frame
+(<a href="#end-of-video-frame" class="auto internal xref">Section 4.2.3</a>) to indicate to the server that there won't be any more
+data sent.<a href="#section-3.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="reconnect">
+<section id="section-3.4">
+        <h3 id="name-reconnect">
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-reconnect" class="section-name selfRef">Reconnect</a>
+        </h3>
+<p id="section-3.4-1">If the QUIC connection is closed at any point, client MAY reconnect by simply
+repeat the <code>Connection establishment</code> process (<a href="#connection-establishment" class="auto internal xref">Section 3.1</a>) and
+resume sending the same video where it left off.  In order to support
+termination of the new connection by a different server, the client SHOULD
+resume sending video frames starting with I-frame, to guarantee that the video
+track can be decoded.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.4-2">Reconnect can be initiated by the server if it needs to "go away" for
+maintenance. In this case, the server sends a <code>GOAWAY</code> frame (<a href="#goaway-frame" class="auto internal xref">Section 4.2.7</a>)
+to advise the client to gracefully close the connection.  This allows client to
+finish sending some data and establish new connection to continue sending
+without interruption.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="wire-format">
+<section id="section-4">
+      <h2 id="name-wire-format">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-wire-format" class="section-name selfRef">Wire Format</a>
+      </h2>
+<div id="frame-header">
+<section id="section-4.1">
+        <h3 id="name-frame-header">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-frame-header" class="section-name selfRef">Frame Header</a>
+        </h3>
+<p id="section-4.1-1">The client and server exchange information using frames. There are different
+types of frames and the payload of each frame depends on its type.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">Generic frame format:<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-3">
+<pre>
+0       1       2       3       4       5       6       7
++--------------------------------------------------------------+
+|                       Length (64)                            |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+|Type(8)| Payload ...                                          |
++-------+------------------------------------------------------+
+</pre><a href="#section-4.1-3" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-4.1-4">
+          <dt id="section-4.1-4.1">Length(64)`:</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-4.2">
+            <p id="section-4.1-4.2.1">Each frame starts with length field, 64 bit size that tells size of the frame
+in bytes (including predefined fields, so if LENGTH is 100 bytes, then PAYLOAD
+length is 100 - 8 - 8 - 1 = 82 bytes).<a href="#section-4.1-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-4.1-4.3">ID(64):</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-4.4">
+            <p id="section-4.1-4.4.1">64 bit frame sequence number, every new frame MUST have a sequence ID greater
+than that of the previous frame within the same track.  Track ID would be
+specified in each frame. If track ID is not specified it's 0 implicitly.<a href="#section-4.1-4.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-4.1-4.5">Type(8):</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-4.6">
+            <p id="section-4.1-4.6.1">1 byte representing the type of the frame.<a href="#section-4.1-4.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-4.1-5">Predefined frame types:<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Frame Type</th>
+              <th class="text-left" rowspan="1" colspan="1">Frame</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x0</td>
+              <td class="text-left" rowspan="1" colspan="1">connect frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x1</td>
+              <td class="text-left" rowspan="1" colspan="1">connect ack frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x2</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x3</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x4</td>
+              <td class="text-left" rowspan="1" colspan="1">end of video frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x5</td>
+              <td class="text-left" rowspan="1" colspan="1">error frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x6</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x7</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x8</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x9</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xA</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0XB</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xC</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xD</td>
+              <td class="text-left" rowspan="1" colspan="1">video frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0xE</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0XF</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0X10</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x11</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x12</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x13</td>
+              <td class="text-left" rowspan="1" colspan="1">reserved</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x14</td>
+              <td class="text-left" rowspan="1" colspan="1">audio frame</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0x15</td>
+              <td class="text-left" rowspan="1" colspan="1">GOAWAY frame</td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+<div id="frames">
+<section id="section-4.2">
+        <h3 id="name-frames">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-frames" class="section-name selfRef">Frames</a>
+        </h3>
+<div id="connect-frame">
+<section id="section-4.2.1">
+          <h4 id="name-connect-frame">
+<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-connect-frame" class="section-name selfRef">Connect frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.1-1">
+<pre>
++--------------------------------------------------------------+
+|                       Length (64)                            |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+-------+---------------+---------------+--------------+
+| 0x0   |Version|Video Timescale|Audio Timescale|              |
++-------+-------+---------------+---------------+--------------+
+|                    Live Session ID(64)                       |
++--------------------------------------------------------------+
+| Payload ...                                                  |
++--------------------------------------------------------------+
+</pre><a href="#section-4.2.1-1" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.1-2">
+            <dt id="section-4.2.1-2.1">Version (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.1-2.2">
+              <p id="section-4.2.1-2.2.1">version of the protocol (initial version is 0x0).<a href="#section-4.2.1-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.1-2.3">Video Timescale(unsigned 16bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.1-2.4">
+              <p id="section-4.2.1-2.4.1">timescale for all video frame timestamps on this connection. Recommended value
+30000<a href="#section-4.2.1-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.1-2.5">Audio Timescale(unsigned 16bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.1-2.6">
+              <p id="section-4.2.1-2.6.1">timescale for all audio samples timestamps on this connection, recommended
+value same as audio sample rate, for example 44100<a href="#section-4.2.1-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.1-2.7">Live Session ID(unsigned 64bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.1-2.8">
+              <p id="section-4.2.1-2.8.1">identifier of broadcast, when reconnect, client MUST use the same live session
+ID<a href="#section-4.2.1-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.1-2.9">Payload:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.1-2.10">
+              <p id="section-4.2.1-2.10.1">application and version specific data that can be used by the server. OPTIONAL<a href="#section-4.2.1-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.1-3">This frame is used by the client to initiate broadcasting. The client can start
+sending other frames immediately after "Connect frame" without waiting
+acknowledgement from the server.<a href="#section-4.2.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-4">If server doesn't support VERSION sent by the client, the server sends an Error
+frame with code <code>UNSUPPORTED VERSION</code>.<a href="#section-4.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-5">If audio timescale or video timescale are 0, the server sends error frame with
+error code <code>INVALID FRAME FORMAT</code> and closes connection.<a href="#section-4.2.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-6">If the client receives a Connect frame from the server, the client sends an
+Error frame with code <code>TBD</code>.<a href="#section-4.2.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="connect-ack-frame">
+<section id="section-4.2.2">
+          <h4 id="name-connect-ack-frame">
+<a href="#section-4.2.2" class="section-number selfRef">4.2.2. </a><a href="#name-connect-ack-frame" class="section-name selfRef">Connect Ack frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.2-1">
+<pre>
+0       1       2       3       4       5       6       7
++--------------------------------------------------------------+
+|                       Length (64) = 17                       |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x1   |
++-------+
+</pre><a href="#section-4.2.2-1" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-2">The server sends the "Connect Ack" frame in response to "Connect" frame
+indicating that server accepts "version" and is ready to receive data.<a href="#section-4.2.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-3">If the client doesn't receive "Connect Ack" frame from the server within a
+timeout, it will close the connection.  The timeout value is chosen by the
+implementation.<a href="#section-4.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-4">There can be only one "Connect Ack" frame sent over lifetime of the QUIC
+connection.<a href="#section-4.2.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-5">If the server receives a Connect Ack frame from the client, the client sends an
+Error frame with code <code>TBD</code>.<a href="#section-4.2.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="end-of-video-frame">
+<section id="section-4.2.3">
+          <h4 id="name-end-of-video-frame">
+<a href="#section-4.2.3" class="section-number selfRef">4.2.3. </a><a href="#name-end-of-video-frame" class="section-name selfRef">End of Video frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.3-1">
+<pre>
++--------------------------------------------------------------+
+|                       Length (64) = 17                       |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x4   |
++-------+
+</pre><a href="#section-4.2.3-1" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.3-2">End of Video frame is sent by a client when it's done sending data and is about
+to close the connection. The server SHOULD ignore all frames sent after that.<a href="#section-4.2.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="error-frame">
+<section id="section-4.2.4">
+          <h4 id="name-error-frame">
+<a href="#section-4.2.4" class="section-number selfRef">4.2.4. </a><a href="#name-error-frame" class="section-name selfRef">Error frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.4-1">
+<pre>
++--------------------------------------------------------------+
+|                       Length (64) = 29                       |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x5   |
++-------+------------------------------------------------------+
+|                   Sequence ID (64)                           |
++------------------------------+-------------------------------+
+|      Error Code (32)         |
++------------------------------+
+</pre><a href="#section-4.2.4-1" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.4-2">
+            <dt id="section-4.2.4-2.1">Sequence ID(unsigned 64bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.4-2.2">
+              <p id="section-4.2.4-2.2.1">ID of the frame sent by the client that error is generated for, ID=0x0
+indicates connection level error.<a href="#section-4.2.4-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.4-2.3">Error Code(unsigned 32bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.4-2.4">
+              <p id="section-4.2.4-2.4.1">Indicates the error code<a href="#section-4.2.4-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.4-3">Error frame can be sent by the client or the server to indicate that an error
+occurred.<a href="#section-4.2.4-3" class="pilcrow">¶</a></p>
+<p id="section-4.2.4-4">Some errors are fatal and the connection will be closed after sending the Error
+frame.<a href="#section-4.2.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="video-frame">
+<section id="section-4.2.5">
+          <h4 id="name-video-frame">
+<a href="#section-4.2.5" class="section-number selfRef">4.2.5. </a><a href="#name-video-frame" class="section-name selfRef">Video frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.5-1">
+<pre>
++--------------------------------------------------------------+
+|                       Length (64)                            |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+-------+----------------------------------------------+
+|  0xD  | Codec |
++-------+-------+----------------------------------------------+
+|                        PTS (64)                              |
++--------------------------------------------------------------+
+|                        DTS (64)                              |
++-------+------------------------------------------------------+
+|TrackID|                                                      |
++-------+-------+----------------------------------------------+
+| I Offset      | Video Data ...                               |
++---------------+----------------------------------------------+
+</pre><a href="#section-4.2.5-1" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.5-2">
+            <dt id="section-4.2.5-2.1">Codec (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-2.2">
+              <p id="section-4.2.5-2.2.1">specifies codec that was used to encode this frame.<a href="#section-4.2.5-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.5-2.3">PTS (unsigned 64bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-2.4">
+              <p id="section-4.2.5-2.4.1">presentation timestamp in connection video timescale<a href="#section-4.2.5-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.5-2.5">DTS (unsigned 64bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-2.6">
+              <p id="section-4.2.5-2.6.1">decoding timestamp in connection video timescale<a href="#section-4.2.5-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.5-3">Supported type of codecs:<a href="#section-4.2.5-3" class="pilcrow">¶</a></p>
+<table class="center" id="table-2">
+            <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+<thead>
+              <tr>
+                <th class="text-left" rowspan="1" colspan="1">Type</th>
+                <th class="text-left" rowspan="1" colspan="1">Codec</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x1</td>
+                <td class="text-left" rowspan="1" colspan="1">H264</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x2</td>
+                <td class="text-left" rowspan="1" colspan="1">H265</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x3</td>
+                <td class="text-left" rowspan="1" colspan="1">VP8</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x4</td>
+                <td class="text-left" rowspan="1" colspan="1">VP9</td>
+              </tr>
+            </tbody>
+          </table>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.5-5">
+            <dt id="section-4.2.5-5.1">Track ID (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-5.2">
+              <p id="section-4.2.5-5.2.1">ID of the track that this frame is on<a href="#section-4.2.5-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.5-5.3">I Offset (unsigned 16bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-5.4">
+              <p id="section-4.2.5-5.4.1">Distance from sequence ID of the I-frame that is required before this frame
+can be decoded. This can be useful to decide if frame can be dropped.<a href="#section-4.2.5-5.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.5-5.5">Video Data:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.5-5.6">
+              <p id="section-4.2.5-5.6.1">variable length field, that carries actual video frame data that is codec
+dependent<a href="#section-4.2.5-5.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.5-6">For h264/h265 codec, "Video Data" are 1 or more NALUs in AVCC format:<a href="#section-4.2.5-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.5-7">
+<pre>
+0       1       2       3       4       5       6       7
++--------------------------------------------------------------+
+|                    NALU Length (64)                          |
++--------------------------------------------------------------+
+|                    NALU Data ...
++--------------------------------------------------------------+
+</pre><a href="#section-4.2.5-7" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.5-8">EVERY h264 video key-frame MUST start with SPS/PPS NALUs.
+EVERY h265 video key-frame MUST start with VPS/SPS/PPS NALUs.<a href="#section-4.2.5-8" class="pilcrow">¶</a></p>
+<p id="section-4.2.5-9">Binary concatenation of "video data" from consecutive video frames, without data
+loss MUST produce VALID h264/h265 bitstream.<a href="#section-4.2.5-9" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="audio-frame">
+<section id="section-4.2.6">
+          <h4 id="name-audio-frame">
+<a href="#section-4.2.6" class="section-number selfRef">4.2.6. </a><a href="#name-audio-frame" class="section-name selfRef">Audio frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.6-1">
+<pre>
++--------------------------------------------------------------+
+|                       Length (64)                            |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x14  | Codec |
++-------+-------+----------------------------------------------+
+|                      Timestamp (64)                          |
++-------+-------+-------+--------------------------------------+
+|TrackID|   Header Len  |
++-------+-------+-------+--------------------------------------+
+| Header + Audio Data ...
++--------------------------------------------------------------+
+</pre><a href="#section-4.2.6-1" class="pilcrow">¶</a>
+</div>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.6-2">
+            <dt id="section-4.2.6-2.1">Codec (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.6-2.2">
+              <p id="section-4.2.6-2.2.1">specifies codec that was used to encode this frame.<a href="#section-4.2.6-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.6-3">Supported type of codecs:<a href="#section-4.2.6-3" class="pilcrow">¶</a></p>
+<table class="center" id="table-3">
+            <caption><a href="#table-3" class="selfRef">Table 3</a></caption>
+<thead>
+              <tr>
+                <th class="text-left" rowspan="1" colspan="1">Type</th>
+                <th class="text-left" rowspan="1" colspan="1">Codec</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x1</td>
+                <td class="text-left" rowspan="1" colspan="1">AAC</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0x2</td>
+                <td class="text-left" rowspan="1" colspan="1">OPUS</td>
+              </tr>
+            </tbody>
+          </table>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.6-5">
+            <dt id="section-4.2.6-5.1">Timestamp (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.6-5.2">
+              <p id="section-4.2.6-5.2.1">timestamp of first audio sample in Audio Data.<a href="#section-4.2.6-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.6-5.3">Track ID (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.6-5.4">
+              <p id="section-4.2.6-5.4.1">ID of the track that this frame is on<a href="#section-4.2.6-5.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.6-5.5">Header Len (unsigned 8bits):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.6-5.6">
+              <p id="section-4.2.6-5.6.1">Length in bytes of the audio header contained in the first portion of the payload<a href="#section-4.2.6-5.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.6-5.7">Audio Data (variable length field):</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.6-5.8">
+              <p id="section-4.2.6-5.8.1">it carries the audio header in XXX format and 1 or more audio frames that is codec
+dependent.<a href="#section-4.2.6-5.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.6-6">For AAC codec:
+- "Audio Data" are 1 or more AAC samples, prefixed with Audio Specific Config (ASC) header defined in <code>ISO 14496-3</code>
+- Binary concatenation of all AAC samples in "Audio Data" from consecutive audio frames, without data loss MUST produce VALID AAC bitstream.<a href="#section-4.2.6-6" class="pilcrow">¶</a></p>
+<p id="section-4.2.6-7">For OPUS codec:
+- "Audio Data" are 1 or more OPUS samples, prefixed with OPUS header as defined in <span>[<a href="#RFC7845" class="cite xref">RFC7845</a>]</span><a href="#section-4.2.6-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="goaway-frame">
+<section id="section-4.2.7">
+          <h4 id="name-goaway-frame">
+<a href="#section-4.2.7" class="section-number selfRef">4.2.7. </a><a href="#name-goaway-frame" class="section-name selfRef">GOAWAY frame</a>
+          </h4>
+<div class="alignLeft art-text artwork" id="section-4.2.7-1">
+<pre>
+0       1       2       3       4       5       6       7
++--------------------------------------------------------------+
+|                          17                                  |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x15  |
++-------+
+</pre><a href="#section-4.2.7-1" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.7-2">The GOAWAY frame is used by the server to initiate graceful shutdown of a connection, for example, for server maintenance.<a href="#section-4.2.7-2" class="pilcrow">¶</a></p>
+<p id="section-4.2.7-3">Upon receiving GOAWAY, the client MUST send frames remaining in current GOP and
+stop sending new frames on this connection. The client SHOULD establish a new
+connection and resume sending frames there.<a href="#section-4.2.7-3" class="pilcrow">¶</a></p>
+<p id="section-4.2.7-4">After sending a GOAWAY frame, the server continues processing arriving frames
+for an implementation defined time, after which the server SHOULD close
+the connection.<a href="#section-4.2.7-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="quic-mapping">
+<section id="section-4.3">
+        <h3 id="name-quic-mapping">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-quic-mapping" class="section-name selfRef">QUIC Mapping</a>
+        </h3>
+<p id="section-4.3-1">One of the main goals of the RUSH protocol was ability to provide applications a
+way to control reliability of delivering audio/video data. This is achieved by
+using a special mode <a href="#multi-stream-mode" class="auto internal xref">Section 4.3.2</a>.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<div id="normal-mode">
+<section id="section-4.3.1">
+          <h4 id="name-normal-mode">
+<a href="#section-4.3.1" class="section-number selfRef">4.3.1. </a><a href="#name-normal-mode" class="section-name selfRef">Normal mode</a>
+          </h4>
+<p id="section-4.3.1-1">In normal mode, RUSH uses one bidirectional QUIC stream to send data and receive
+data.  Using one stream guarantees reliable, in-order delivery - applications
+can rely on QUIC transport layer to retransmit lost packets.  The performance
+characteristics of this mode are similar to RTMP over TCP.<a href="#section-4.3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="multi-stream-mode">
+<section id="section-4.3.2">
+          <h4 id="name-multi-stream-mode">
+<a href="#section-4.3.2" class="section-number selfRef">4.3.2. </a><a href="#name-multi-stream-mode" class="section-name selfRef">Multi Stream Mode</a>
+          </h4>
+<p id="section-4.3.2-1">In normal mode, if packet belonging to video frame is lost, all packets sent
+after it will not be delivered to application, even though those packets may
+have arrived at the server. This introduces head of line blocking and can
+negatively impact latency.<a href="#section-4.3.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.3.2-2">To address this problem, RUSH defines "Multi Stream Mode", in which one QUIC
+stream is used per audio/video frame.<a href="#section-4.3.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.3.2-3">Connection establishment follows the normal procedure by client sending Connect
+frame, after that Video and Audio frames are sent using following rules:<a href="#section-4.3.2-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.3.2-4.1">Each new frame is sent on new bidirectional QUIC stream<a href="#section-4.3.2-4.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-4.3.2-4.2">Frames within same track must have IDs that are monotonically increasing,
+such that ID(n) = ID(n-1) + 1<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
+</li>
+          </ul>
+<p id="section-4.3.2-5">The receiver reconstructs the track using the frames IDs.<a href="#section-4.3.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.3.2-6">Response Frames (Connect Ack and Error), will be in the response stream of the
+stream that sent it.<a href="#section-4.3.2-6" class="pilcrow">¶</a></p>
+<p id="section-4.3.2-7">The client MAY control delivery reliability by setting a delivery timer for
+every audio or video frame and reset the QUIC stream when the timer fires.  This
+will effectively stop retransmissions if the frame wasn't fully delivered in
+time.<a href="#section-4.3.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.3.2-8">Timeout is implementation defined, however future versions of the draft will
+define a way to negotiate it.<a href="#section-4.3.2-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="error-handling">
+<section id="section-5">
+      <h2 id="name-error-handling">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-error-handling" class="section-name selfRef">Error Handling</a>
+      </h2>
+<p id="section-5-1">An endpoint that detects an error SHOULD signal the existence of that error to
+its peer.  Errors can affect an entire connection (see <a href="#connection-errors" class="auto internal xref">Section 5.1</a>),
+or a single frame (see <a href="#frame-errors" class="auto internal xref">Section 5.2</a>).<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">The most appropriate error code SHOULD be included in the error frame that
+signals the error.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="connection-errors">
+<section id="section-5.1">
+        <h3 id="name-connection-errors">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-connection-errors" class="section-name selfRef">Connection Errors</a>
+        </h3>
+<p id="section-5.1-1">There is one error code defined in core of the protocol that indicates
+connection error:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">1 - UNSUPPORTED VERSION - indicates that the server doesn't support version
+specified in Connect frame<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="frame-errors">
+<section id="section-5.2">
+        <h3 id="name-frame-errors">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-frame-errors" class="section-name selfRef">Frame errors</a>
+        </h3>
+<p id="section-5.2-1">There are two error codes defined in core protocol that indicate a problem with
+a particular frame:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">2 - UNSUPPORTED CODEC - indicates that the server doesn't support the given
+audio or video codec<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">3 - INVALID FRAME FORMAT - indicates that the receiver was not able to parse
+the frame or there was an issue with a field's value.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="extensions">
+<section id="section-6">
+      <h2 id="name-extensions">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-extensions" class="section-name selfRef">Extensions</a>
+      </h2>
+<p id="section-6-1">RUSH permits extension of the protocol.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Extensions are permitted to use new frame types (<a href="#wire-format" class="auto internal xref">Section 4</a>), new error
+codes (<a href="#error-frame" class="auto internal xref">Section 4.2.4</a>), or new audio and video codecs (<a href="#audio-frame" class="auto internal xref">Section 4.2.6</a>,
+<a href="#video-frame" class="auto internal xref">Section 4.2.5</a>).<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Implementations MUST ignore unknown or unsupported values in all extensible
+protocol elements, except <code>codec id</code>, which returns an UNSUPPORTED CODEC error.
+Implementations MUST discard frames that have unknown or unsupported types.<a href="#section-6-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-7">
+      <h2 id="name-security-considerations">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-7-1">RUSH protocol relies on security guarantees provided by the transport.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">Implementation SHOULD be prepare to handle cases when sender deliberately sends
+frames with gaps in sequence IDs.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">Implementation SHOULD be prepare to handle cases when server never receives
+Connect frame (<a href="#connect-frame" class="auto internal xref">Section 4.2.1</a>).<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-4">A frame parser MUST ensure that value of frame length field (see
+<a href="#frame-header" class="auto internal xref">Section 4.1</a>) matches actual length of the frame, including the frame
+header.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">Implementation SHOULD be prepare to handle cases when sender sends a frame with
+large frame length field value.<a href="#section-7-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-8">
+      <h2 id="name-iana-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-8-1">TODO: add frame type registry, error code registry, audio/video codecs
+registry<a href="#section-8-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<section id="section-9">
+      <h2 id="name-normative-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+      </h2>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+      <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7845">[RFC7845]</dt>
+      <dd>
+<span class="refAuthor">Terriberry, T.</span>, <span class="refAuthor">Lee, R.</span>, and <span class="refAuthor">R. Giles</span>, <span class="refTitle">"Ogg Encapsulation for the Opus Audio Codec"</span>, <span class="seriesInfo">RFC 7845</span>, <span class="seriesInfo">DOI 10.17487/RFC7845</span>, <time datetime="2016-04" class="refDate">April 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7845">https://www.rfc-editor.org/rfc/rfc7845</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+    <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+<div id="acknowledgments">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">This draft is the work of many people: Vlad Shubin, Nitin Garg, Milen Lazarov,
+Benny Luo, Nick Ruff, Konstantin Tsoy, Nick Wu.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Kirill Pugin</span></div>
+<div dir="auto" class="left"><span class="org">Facebook</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:ikir@meta.com" class="email">ikir@meta.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Alan Frindell</span></div>
+<div dir="auto" class="left"><span class="org">Facebook</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:afrind@meta.com" class="email">afrind@meta.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jordi Cenzano</span></div>
+<div dir="auto" class="left"><span class="org">Facebook</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:jcenzano@meta.com" class="email">jcenzano@meta.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jake Weissman</span></div>
+<div dir="auto" class="left"><span class="org">Facebook</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:jakeweissman@meta.com" class="email">jakeweissman@meta.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
