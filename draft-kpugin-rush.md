@@ -258,6 +258,7 @@ Predefined frame types:
 | 0x13 | reserved |
 | 0x14 | reserved |
 | 0x15 | GOAWAY frame |
+| 0x16 | Timed metadata |
 
 ## Frames
 
@@ -370,7 +371,7 @@ Sequence ID(unsigned 64bits):
 indicates connection level error.
 
 Error Code(unsigned 32bits):
-: Indicates the error code 
+: Indicates the error code
 
 Error frame can be sent by the client or the server to indicate that an error
 occurred.
@@ -476,7 +477,7 @@ Supported type of codecs:
 |0x1| AAC|
 |0x2| OPUS|
 
-Timestamp (unsigned 8bits):
+Timestamp (unsigned 64bits):
 : timestamp of first audio sample in Audio Data.
 
 Track ID (unsigned 8bits):
@@ -525,6 +526,47 @@ connection and resume sending frames there.
 After sending a GOAWAY frame, the server continues processing arriving frames
 for an implementation defined time, after which the server SHOULD close
 the connection.
+
+
+### TimedMetadata frame
+
+~~~
++--------------------------------------------------------------+
+|                       Length (64)                            |
++--------------------------------------------------------------+
+|                       ID (64)                                |
++-------+------------------------------------------------------+
+| 0x16  |TrackID|
++-------+-------+----------------------------------------------+
+|                      Topic (64)                              |
++--------------------------------------------------------------+
+|                      EventMessage (64)                       |
++-------+------------------------------------------------------+
+|                      Timestamp (64)                          |
++-------+------------------------------------------------------+
+|                      Duration (64)                           |
++-------+------------------------------------------------------+
+| Payload ...
++--------------------------------------------------------------+
+~~~
+
+Track ID (unsigned 8bits):
+: ID of the track that this frame is on
+
+Timestamp (unsigned 64bits):
+: PTS of the event
+
+Topic (unsigned 64bits):
+: A unique identifier of the app level feature. May be used to decode payload or do other application specific processing
+
+EventMessage (unsigned 64bits):
+: A unique identifier of the event message used for app level events deduplication
+
+Duration (unsigned 64bits):
+: duration of the event in video PTS timescale. Can be 0.
+
+Payload:
+: variable length field. May be used by the app to send additional event metadata. JSON recommended
 
 ## QUIC Mapping
 
