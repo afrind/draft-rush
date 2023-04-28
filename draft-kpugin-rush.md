@@ -127,15 +127,14 @@ After the QUIC connection is established, client creates a new bidirectional
 QUIC stream, choses starting frame ID and sends `Connect` frame
 {{connect-frame}} over that stream.  This stream is called the Connect Stream.
 
-The client sends `mode of operation` setting in `Connect` frame payload, format
-of the payload is `TBD`.
+The client sends `mode of operation` setting in `Connect` frame {{connect-frame}} payload.
 
-One connection SHOULD only be used to send one video.
+One connection SHOULD only be used to send one media stream, for now 1 video and 1 audio track are supported. In the future we could send multiple tracks per stream.
 
 ## Sending Video Data
 
 The client can choose to wait for the `ConnectAck` frame {{connect-ack-frame}}
-or it can start sending data immediately after sending the `Connect` frame.
+or it can start optimistically sending data immediately after sending the `Connect` frame.
 
 A track is a logical organization of the data, for example, video can have one
 video track, and two audio tracks (for two languages). The client can send data
@@ -155,15 +154,14 @@ guarantee that the frame was received by the server.
 
 ## Receiving data
 
-Upon receiving `Connect` frame, the server replies with `ConnectAck` frame
-{{connect-ack-frame}} and prepares to receive audio/video data.
+Upon receiving `Connect` frame {{connect-frame}}, if the server accepts the stream, the server will reply with `ConnectAck` frame {{connect-ack-frame}} and it will prepare to receive audio/video data.
 
 It's possible that in `Multi Stream Mode` ({{multi-stream-mode}}), the server
-receives audio or video data before it receives the `Connect` frame.  The
-implementation can choose whether to buffer or drop the data.  The audio/video
-data cannot be interpreted correctly before the arrival of the `Connect` frame.
+receives audio or video data before it receives the `Connect` frame {{connect-frame}}.  The
+implementation can choose whether to buffer or drop the data.
+The audio/video data cannot be interpreted correctly before the arrival of the `Connect` frame {{connect-frame}}.
 
-In `Normal Mode` ({{normal-mode}}), it is guaranteed by the transport that
+In `Single Stream Mode` ({{single-stream-mode}}), it is guaranteed by the transport that
 frames arrive into the application layer in order they were sent.
 
 In `Multi Stream Mode`, it's possible that frames arrive at the application
@@ -180,6 +178,8 @@ frames. For example if the server receives the following frames for track 1: `1
 2 3 5 6` and frame `#4` hasn't arrived after implementation defined timeout,
 thee server SHOULD continue processing frames `5` and `6`.
 
+It is worth highlighting that in multi stream mode there is a need for a de-jitter function (that introduces latency). Also the subsequent processing pipeline should tolerate lost frames, so "holes" in the audio / video streams.
+
 When the client is done streaming, it sends the `End of Video` frame
 ({{end-of-video-frame}}) to indicate to the server that there won't be any more
 data sent.
@@ -191,7 +191,7 @@ repeat the `Connection establishment` process ({{connection-establishment}}) and
 resume sending the same video where it left off.  In order to support
 termination of the new connection by a different server, the client SHOULD
 resume sending video frames starting with I-frame, to guarantee that the video
-track can be decoded.
+track can be decoded from the 1st frame sent.
 
 Reconnect can be initiated by the server if it needs to "go away" for
 maintenance. In this case, the server sends a `GOAWAY` frame ({{goaway-frame}})
@@ -205,6 +205,8 @@ without interruption.
 
 The client and server exchange information using frames. There are different
 types of frames and the payload of each frame depends on its type.
+
+The bytes in the wire are in **big endian**
 
 Generic frame format:
 
@@ -282,8 +284,7 @@ Version (unsigned 8bits):
 : version of the protocol (initial version is 0x0).
 
 Video Timescale(unsigned 16bits):
-: timescale for all video frame timestamps on this connection. Recommended value
-30000
+: timescale for all video frame timestamps on this connection. For instance 25
 
 Audio Timescale(unsigned 16bits):
 : timescale for all audio samples timestamps on this connection, recommended
@@ -295,19 +296,23 @@ ID
 
 Payload:
 : application and version specific data that can be used by the server. OPTIONAL
+A possible implementation for this could be to add in the payload a UTF-8 encoded JSON data that specifies some parameters that server needs to authenticate / validate that connection, for instance:
+~~~
+payloadBytes = strToJSonUtf8('{"url": "/rtmp/BID?s_bl=1&s_l=3&s_sc=VALID&s_sw=0&s_vt=usr_dev&a=TOKEN"}')
+~~~
 
 This frame is used by the client to initiate broadcasting. The client can start
-sending other frames immediately after "Connect frame" without waiting
+sending other frames immediately after Connect frame {{connect-frame}} without waiting
 acknowledgement from the server.
 
 If server doesn't support VERSION sent by the client, the server sends an Error
-frame with code `UNSUPPORTED VERSION`.
+frame {{error-frame}} with code `UNSUPPORTED VERSION`.
 
-If audio timescale or video timescale are 0, the server sends error frame with
+If audio timescale or video timescale are 0, the server sends error frame {{error-frame}} with
 error code `INVALID FRAME FORMAT` and closes connection.
 
 If the client receives a Connect frame from the server, the client sends an
-Error frame with code `TBD`.
+Error frame {{error-frame}} with code `TBD`.
 
 ### Connect Ack frame
 
@@ -322,8 +327,8 @@ Error frame with code `TBD`.
 +-------+
 ~~~
 
-The server sends the "Connect Ack" frame in response to "Connect" frame
-indicating that server accepts "version" and is ready to receive data.
+The server sends the "Connect Ack" frame in response to "Connect" {{connect-frame}} frame
+indicating that server accepts "version" and the stream is authenticated / validated (optional), so it is ready to receive data.
 
 If the client doesn't receive "Connect Ack" frame from the server within a
 timeout, it will close the connection.  The timeout value is chosen by the
@@ -379,6 +384,7 @@ occurred.
 Some errors are fatal and the connection will be closed after sending the Error
 frame.
 
+See section {{connection-errors}} and {{frame-errors}} for more information about error codes
 
 ### Video frame
 
@@ -403,10 +409,10 @@ frame.
 Codec (unsigned 8bits):
 : specifies codec that was used to encode this frame.
 
-PTS (unsigned 64bits):
+PTS (signed 64bits):
 : presentation timestamp in connection video timescale
 
-DTS (unsigned 64bits):
+DTS (signed 64bits):
 : decoding timestamp in connection video timescale
 
 Supported type of codecs:
@@ -418,7 +424,6 @@ Supported type of codecs:
 |0x3| VP8|
 |0x4| VP9|
 
-
 Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
@@ -426,12 +431,11 @@ I Offset (unsigned 16bits):
 : Distance from sequence ID of the I-frame that is required before this frame
 can be decoded. This can be useful to decide if frame can be dropped.
 
-
 Video Data:
 : variable length field, that carries actual video frame data that is codec
 dependent
 
-For h264/h265 codec, "Video Data" are 1 or more NALUs in AVCC format:
+For h264/h265 codec, "Video Data" are 1 or more NALUs in AVCC format (4 bytes size header):
 
 ~~~
 0       1       2       3       4       5       6       7
@@ -477,18 +481,17 @@ Supported type of codecs:
 |0x1| AAC|
 |0x2| OPUS|
 
-Timestamp (unsigned 64bits):
+Timestamp (signed 64bits):
 : timestamp of first audio sample in Audio Data.
 
 Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
-Header Len (unsigned 8bits):
+Header Len (unsigned 16bits):
 : Length in bytes of the audio header contained in the first portion of the payload
 
 Audio Data (variable length field):
-: it carries the audio header in XXX format and 1 or more audio frames that is codec
-dependent.
+: it carries the audio header and 1 or more audio frames that are codec dependent.
 
 For AAC codec:
 - "Audio Data" are 1 or more AAC samples, prefixed with Audio Specific Config (ASC) header defined in `ISO 14496-3`
@@ -513,9 +516,8 @@ For OPUS codec:
 
 The GOAWAY frame is used by the server to initiate graceful shutdown of a connection, for example, for server maintenance.
 
-Upon receiving GOAWAY, the client MUST send frames remaining in current GOP and
-stop sending new frames on this connection. The client SHOULD establish a new
-connection and resume sending frames there.
+Upon receiving GOAWAY frame, the client MUST send frames remaining in current GOP and
+stop sending new frames on this connection. The client SHOULD establish a new connection and resume sending frames there, so when resume video frame will start with an IDR frame.
 
 After sending a GOAWAY frame, the server continues processing arriving frames
 for an implementation defined time, after which the server SHOULD close
@@ -547,7 +549,7 @@ the connection.
 Track ID (unsigned 8bits):
 : ID of the track that this frame is on
 
-Timestamp (unsigned 64bits):
+Timestamp (signed 64bits):
 : PTS of the event
 
 Topic (unsigned 64bits):
@@ -560,7 +562,7 @@ Duration (unsigned 64bits):
 : duration of the event in video PTS timescale. Can be 0.
 
 Payload:
-: variable length field. May be used by the app to send additional event metadata. JSON recommended
+: variable length field. May be used by the app to send additional event metadata. UTF-8 JSON recommended
 
 ## QUIC Mapping
 
@@ -568,16 +570,16 @@ One of the main goals of the RUSH protocol was ability to provide applications a
 way to control reliability of delivering audio/video data. This is achieved by
 using a special mode {{multi-stream-mode}}.
 
-### Normal mode
+### Single Stream Mode
 
-In normal mode, RUSH uses one bidirectional QUIC stream to send data and receive
+In single stream mode, RUSH uses one bidirectional QUIC stream to send data and receive
 data.  Using one stream guarantees reliable, in-order delivery - applications
 can rely on QUIC transport layer to retransmit lost packets.  The performance
 characteristics of this mode are similar to RTMP over TCP.
 
 ### Multi Stream Mode
 
-In normal mode, if packet belonging to video frame is lost, all packets sent
+In single stream mode {{single-stream-mode}}, if packet belonging to video frame is lost, all packets sent
 after it will not be delivered to application, even though those packets may
 have arrived at the server. This introduces head of line blocking and can
 negatively impact latency.
@@ -594,7 +596,7 @@ such that ID(n) = ID(n-1) + 1
 
 The receiver reconstructs the track using the frames IDs.
 
-Response Frames (Connect Ack and Error), will be in the response stream of the
+Response Frames (Connect Ack{{connect-ack-frame}} and Error{{error-frame}}), will be in the response stream of the
 stream that sent it.
 
 The client MAY control delivery reliability by setting a delivery timer for
@@ -617,12 +619,11 @@ signals the error.
 
 ## Connection Errors
 
-There is one error code defined in core of the protocol that indicates
-connection error:
+Affects the the whole connection:
 
 1 - UNSUPPORTED VERSION - indicates that the server doesn't support version
 specified in Connect frame
-
+4- CONNECTION_REJECTED - Indicates the server can not process that connection for any reason
 
 ## Frame errors
 
@@ -651,7 +652,7 @@ Implementations MUST discard frames that have unknown or unsupported types.
 
 RUSH protocol relies on security guarantees provided by the transport.
 
-Implementation SHOULD be prepare to handle cases when sender deliberately sends
+Implementation SHOULD be prepared to handle cases when sender deliberately sends
 frames with gaps in sequence IDs.
 
 Implementation SHOULD be prepare to handle cases when server never receives
