@@ -5,9 +5,9 @@
 TODO Working Group                                              K. Pugin
 Internet-Draft                                               A. Frindell
 Intended status: Informational                                J. Cenzano
-Expires: 4 November 2023                                     J. Weissman
+Expires: 11 November 2023                                    J. Weissman
                                                                 Facebook
-                                                              3 May 2023
+                                                             10 May 2023
 
 
             RUSH - Reliable (unreliable) streaming protocol
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 November 2023.
+   This Internet-Draft will expire on 11 November 2023.
 
 Copyright Notice
 
