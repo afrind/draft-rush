@@ -17,22 +17,27 @@ author:
  -
     ins: K. Pugin
     name: Kirill Pugin
-    organization: Facebook
+    organization: Meta
     email: ikir@meta.com
+ -
+    ins: N. Garg
+    name: Nitin Garg
+    organization: Meta
+    email: ngarg@meta.com
  -
     ins: A. Frindell
     name: Alan Frindell
-    organization: Facebook
+    organization: Meta
     email: afrind@meta.com
  -
     ins: J. Cenzano
     name: Jordi Cenzano
-    organization: Facebook
+    organization: Meta
     email: jcenzano@meta.com
  -
     ins: J. Weissman
     name: Jake Weissman
-    organization: Facebook
+    organization: Meta
     email: jakeweissman@meta.com
 
 normative:
