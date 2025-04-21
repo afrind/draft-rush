@@ -3,11 +3,12 @@
 
 
 TODO Working Group                                              K. Pugin
-Internet-Draft                                               A. Frindell
-Intended status: Informational                                J. Cenzano
-Expires: 11 November 2023                                    J. Weissman
-                                                                Facebook
-                                                             10 May 2023
+Internet-Draft                                                   N. Garg
+Intended status: Informational                               A. Frindell
+Expires: 23 October 2025                                      J. Cenzano
+                                                             J. Weissman
+                                                                    Meta
+                                                           21 April 2025
 
 
             RUSH - Reliable (unreliable) streaming protocol
@@ -43,11 +44,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 November 2023.
+   This Internet-Draft will expire on 23 October 2025.
 
 Copyright Notice
 
-   Copyright (c) 2023 IETF Trust and the persons identified as the
+   Copyright (c) 2025 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -758,20 +759,25 @@ Acknowledgments
 Authors' Addresses
 
    Kirill Pugin
-   Facebook
+   Meta
    Email: ikir@meta.com
 
 
+   Nitin Garg
+   Meta
+   Email: ngarg@meta.com
+
+
    Alan Frindell
-   Facebook
+   Meta
    Email: afrind@meta.com
 
 
    Jordi Cenzano
-   Facebook
+   Meta
    Email: jcenzano@meta.com
 
 
    Jake Weissman
-   Facebook
+   Meta
    Email: jakeweissman@meta.com
