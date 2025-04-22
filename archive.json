@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-07-25T00:53:07.959325+00:00",
+  "timestamp": "2025-04-22T01:53:20.977415+00:00",
   "repo": "afrind/draft-rush",
   "labels": [
     {
@@ -24,14 +24,14 @@
       "color": "a2eeef"
     },
     {
-      "name": "help wanted",
-      "description": "Extra attention is needed",
-      "color": "008672"
-    },
-    {
       "name": "good first issue",
       "description": "Good for newcomers",
       "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
     },
     {
       "name": "invalid",
@@ -71,6 +71,30 @@
           "body": "Oops - I think the template generated that automatically.  Right now I emailed a few different IETF lists to gauge interest, looks like the discussion may be happening in avtcore for now.  I'll update the doc to reflect that.",
           "createdAt": "2021-07-13T19:32:29Z",
           "updatedAt": "2021-07-13T19:32:29Z"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOFdOChc5DiVIE",
+      "title": "Discussing venues",
+      "url": "https://github.com/afrind/draft-rush/issues/6",
+      "state": "CLOSED",
+      "author": "SpencerDawkins",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "From IESG/IAB feedback: \r\n\r\n> Should some of this work go to ART and some of it go to TSV? Or should we have one single effort that takes up both parts of what you're proposing?\r\n\r\nI agree that this matters, but\r\n- this needs to take a back seat to the first three BOF goals. \r\n- it might be useful to add a new section/subsection as \"Post-BoF Goals\", and put \"determining existing working groups\" and \"determine appropriate area(s)\" there. I can't speak for anyone on the IESG, but I'd expect that talking about technical considerations is an appropriate use of face-to-face-to-virtual-face time, and talking about administrative minutia is better handed to (the MOQ) mailing list. \r\n\r\nWant me to do a PR on this?",
+      "createdAt": "2022-02-11T20:41:46Z",
+      "updatedAt": "2022-02-11T21:20:06Z",
+      "closedAt": "2022-02-11T21:20:06Z",
+      "comments": [
+        {
+          "author": "afrind",
+          "authorAssociation": "OWNER",
+          "body": "Moved to https://github.com/afrind/moqbof/issues/1\r\n\r\nCan you restate your comment there?  And sure, happy to take a PR!",
+          "createdAt": "2022-02-11T21:20:06Z",
+          "updatedAt": "2022-02-11T21:20:06Z"
         }
       ]
     }
@@ -253,6 +277,214 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 5,
+      "id": "PR_kwDOFdOChc4yi52R",
+      "title": "Questions/Feedback on bofreq",
+      "url": "https://github.com/afrind/draft-rush/pull/5",
+      "state": "OPEN",
+      "author": "afrind",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-02-11T19:49:11Z",
+      "updatedAt": "2022-02-11T19:49:11Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "bbba78c9bfdce6c384531c099ff515da1b5bffdc",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "bofreq-feedback",
+      "headRefOid": "ca9886ce4d5894ee3fd0fff233cf62ec2d6f1be5",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 7,
+      "id": "PR_kwDOFdOChc43Ywqo",
+      "title": "Corrected some packet descriptions",
+      "url": "https://github.com/afrind/draft-rush/pull/7",
+      "state": "MERGED",
+      "author": "jordicenzano",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Corrected some packet descriptions\r\n- Added few more data",
+      "createdAt": "2022-05-06T00:50:00Z",
+      "updatedAt": "2022-05-06T01:39:04Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "bbba78c9bfdce6c384531c099ff515da1b5bffdc",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "update-protocol-desc",
+      "headRefOid": "844d5abbe0174e1b015f80085df9461164615a51",
+      "closedAt": "2022-05-06T01:39:04Z",
+      "mergedAt": "2022-05-06T01:39:04Z",
+      "mergedBy": "jordicenzano",
+      "mergeCommit": {
+        "oid": "582b74d14525124b37439b6e29c2cde1a16ed79a"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 8,
+      "id": "PR_kwDOFdOChc43biRf",
+      "title": "Corrected error in table",
+      "url": "https://github.com/afrind/draft-rush/pull/8",
+      "state": "MERGED",
+      "author": "jordicenzano",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Changed GoAway frame ID",
+      "createdAt": "2022-05-06T18:19:09Z",
+      "updatedAt": "2022-05-06T18:20:26Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "582b74d14525124b37439b6e29c2cde1a16ed79a",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "jordicenzano-patch-1",
+      "headRefOid": "e0bb45adbc6704d87da0bb8b5127d5ffee3267f0",
+      "closedAt": "2022-05-06T18:20:26Z",
+      "mergedAt": "2022-05-06T18:20:26Z",
+      "mergedBy": "jordicenzano",
+      "mergeCommit": {
+        "oid": "5df1c0d999a92df98c778bffd435a81866160a2e"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 9,
+      "id": "PR_kwDOFdOChc5BDHLl",
+      "title": "Updated audio frame to lastest version where includes ASC header",
+      "url": "https://github.com/afrind/draft-rush/pull/9",
+      "state": "MERGED",
+      "author": "jordicenzano",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Updated emails to @meta.com\r\n- Updated audio frame to audio with header (ASC)",
+      "createdAt": "2022-10-18T20:58:04Z",
+      "updatedAt": "2022-10-19T17:48:13Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "5df1c0d999a92df98c778bffd435a81866160a2e",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "jordicenzano-audiowithheader",
+      "headRefOid": "260ea43f72b2bc303452dc5b8a7f2fc6d949bcdd",
+      "closedAt": "2022-10-19T17:48:10Z",
+      "mergedAt": "2022-10-19T17:48:10Z",
+      "mergedBy": "jordicenzano",
+      "mergeCommit": {
+        "oid": "ad432cf4392b84c9336aa22758e3279d9e7643f0"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFdOChc5EbYHI",
+          "commit": {
+            "abbreviatedOid": "260ea43"
+          },
+          "author": "ankit-varma10",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-10-19T17:39:49Z",
+          "updatedAt": "2022-10-19T17:39:49Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "id": "PR_kwDOFdOChc5BDqZX",
+      "title": "Added timed-metadata frame",
+      "url": "https://github.com/afrind/draft-rush/pull/10",
+      "state": "MERGED",
+      "author": "jordicenzano",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Added timed medata frame\r\n- Fixed some byte sizes",
+      "createdAt": "2022-10-19T00:15:53Z",
+      "updatedAt": "2022-10-19T17:47:42Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "5df1c0d999a92df98c778bffd435a81866160a2e",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "jordicenzano-timed-metadata-frame",
+      "headRefOid": "188aeeae719299a078c488649371b716f20040a8",
+      "closedAt": "2022-10-19T17:47:34Z",
+      "mergedAt": "2022-10-19T17:47:34Z",
+      "mergedBy": "jordicenzano",
+      "mergeCommit": {
+        "oid": "aa52e26c144e1f8930a0c0e19ff2aa6501c05914"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFdOChc5EbYdg",
+          "commit": {
+            "abbreviatedOid": "188aeea"
+          },
+          "author": "ankit-varma10",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-10-19T17:40:44Z",
+          "updatedAt": "2022-10-19T17:40:44Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "id": "PR_kwDOFdOChc5Payga",
+      "title": "Keep RUSH open source up to date",
+      "url": "https://github.com/afrind/draft-rush/pull/11",
+      "state": "MERGED",
+      "author": "jordicenzano",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": " Added more information and corrected few mistakes",
+      "createdAt": "2023-04-28T21:42:29Z",
+      "updatedAt": "2023-05-03T15:26:55Z",
+      "baseRepository": "afrind/draft-rush",
+      "baseRefName": "main",
+      "baseRefOid": "ad432cf4392b84c9336aa22758e3279d9e7643f0",
+      "headRepository": "afrind/draft-rush",
+      "headRefName": "feature/update-rush-specs",
+      "headRefOid": "e6fbc1c54584c4fa5f1ca3cf626dc764841b82cf",
+      "closedAt": "2023-05-03T15:26:50Z",
+      "mergedAt": "2023-05-03T15:26:50Z",
+      "mergedBy": "jordicenzano",
+      "mergeCommit": {
+        "oid": "0aa8213262f947946679e0217e1afcbabebaadb0"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFdOChc5UG3lP",
+          "commit": {
+            "abbreviatedOid": "e6fbc1c"
+          },
+          "author": "ankit-varma10",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-05-03T14:53:46Z",
+          "updatedAt": "2023-05-03T14:53:46Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
