@@ -88,3 +88,18 @@ The purpose of this BoF is to:
     * Solutions
         * RUSH - https://datatracker.ietf.org/doc/draft-kpugin-rush/
         * WARP - https://www.ietf.org/archive/id/draft-lcurley-warp-00.html, https://www.youtube.com/watch?v=hG0nmy3Otg4
+
+# Feedback/Questions from IESG/IAB:
+
+1. Should some of this work go to ART and some of it go to TSV? Or should we have one single effort that takes up both parts of what you're proposing?
+2. The group that is advancing this appears to be deflecting attempts by other participants to deal with latency. Should that be in scope for this work?
+3. The true scope we should be considering here is possibly larger than what the proposal currently contains. Back in "the day" when people wanted to do RTP over QUIC, they were told to go away for a while until QUIC was done and fully rolled out. It might be time to re-engage that larger conversation.
+4. Recommendation for strong chairs here
+    * From Murray: we got Magnus so that should be good
+5. Has there been any coordination with the MOPS WG so far? Might be useful to point that out if so.
+6. There was discussion that the proposal as written assumes its premises, that it presumes the stated use cases are the right ones. You should ask those meta-questions first. It shouldn't be "Is there a protocol that meets these needs?" but rather "Are these the right needs we should be discussing?"
+7. Increase it to two hours
+    * This is done
+8. Multiple people agreed that this BoF should happen.
+9. There was some concern that this could go sideways, but we should have the BoF anyway because we need to talk about this topic someplace.
+10. "What practical protocol glue to make stuff (media) work over QUIC is missing?" was a suggested theme.
